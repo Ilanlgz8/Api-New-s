@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { clsx } from 'clsx';
 import {
   Activity,
@@ -248,6 +248,19 @@ export const FootballWidget = React.memo(function FootballWidget() {
     }
     return leagues;
   }, [current.data?.competitions, groups, rawItems.length]);
+
+  useEffect(() => {
+    if (activeLeague === 'TOUT') return;
+
+    const hasCurrentLeague = allCompetitions.some((league) => league.key === activeLeague);
+    const leagueHasMatches = rawItems.some((event: any) => event.competition?.code === activeLeague);
+
+    if (!hasCurrentLeague || !leagueHasMatches) {
+      setActiveLeague('TOUT');
+      setPage(0);
+    }
+  }, [activeLeague, allCompetitions, rawItems]);
+
   const filteredGroups = useMemo(
     () => {
       if (activeLeague === 'TOUT') return groups;

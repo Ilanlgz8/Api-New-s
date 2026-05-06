@@ -437,6 +437,36 @@ async function fetchSportsDbCompetitionNextEvents(code: string, startOffset: num
   return data as any[];
 }
 
+async function fetchSportsDbCompetitionNextEventsFresh(code: string, startOffset: number, endOffset: number, type: 'today' | 'results') {
+  if (type !== 'today') return [];
+
+  const leagueId = TSDB_LEAGUE_ID_BY_CODE[code];
+  if (!leagueId) return [];
+
+  const dateFrom = dateStr(startOffset);
+  const expandedTo = dateStr(endOffset + 14);
+  const res = await fetch(`${TSDB_BASE}/eventsnextleague.php?id=${leagueId}`).catch(() => null);
+  if (!res || !res.ok) return [];
+
+  const json = await res.json().catch(() => ({}));
+  return (json.events ?? [])
+    .map(mapSportsDbMatch)
+    .filter((match: any) => match !== null && match !== undefined)
+    .map((match: any) => ({
+      ...match,
+      competition: {
+        ...(match.competition ?? {}),
+        code,
+        name: COMP_INFO[code]?.name ?? match.competition?.name ?? code,
+      },
+    }))
+    .filter((match: any) => {
+      const matchDate = String(match?.utcDate ?? '').slice(0, 10);
+      return matchDate && matchDate >= dateFrom && matchDate <= expandedTo;
+    })
+    .filter((match: any) => String(match?.status ?? 'SCHEDULED') !== 'FINISHED');
+}
+
 async function fetchSportsDbWindow(startOffset: number, endOffset: number) {
   const dates: string[] = [];
   // Expand date range to catch more events (especially for under-covered leagues like FL1, CL)
@@ -560,7 +590,9 @@ async function fetchOpenLigaDbCompetitionEvents(code: string, startOffset: numbe
 function dedupeEvents(events: any[]) {
   const seen = new Set<string>();
   return events.filter((event) => {
-    const key = String(event?.id ?? `${event?.competition?.code ?? ''}:${event?.homeTeam?.name ?? ''}:${event?.awayTeam?.name ?? ''}:${event?.utcDate ?? ''}`);
+    const comp = String(event?.competition?.code ?? '');
+    const id = String(event?.id ?? '');
+    const key = `${comp}:${id || `${event?.homeTeam?.name ?? ''}:${event?.awayTeam?.name ?? ''}:${event?.utcDate ?? ''}`}`;
     if (!key || seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -625,6 +657,22 @@ async function fetchFootballEventsWindow(type: 'today' | 'results', startOffset:
   const fallback = await fetchSportsDbWindow(startOffset, endOffset);
 
   const merged = dedupeEvents([...footballDataEvents, ...fallback]);
+
+  // Safety net: if a tier-1 league is still missing, pull it directly from TSDB.
+  // This avoids blank CL/FL1 blocks when a previous source returns an empty or stale snapshot.
+  const presentCodes = new Set(merged.map((m: any) => m?.competition?.code).filter(Boolean));
+  const topUpCodes = ['CL', 'FL1'].filter((code) => !presentCodes.has(code));
+  if (topUpCodes.length) {
+    const topUps = await Promise.all(topUpCodes.map(async (code) => {
+      try {
+        return await fetchSportsDbCompetitionNextEvents(code, startOffset, endOffset, type);
+      } catch {
+        return [];
+      }
+    }));
+    merged.push(...topUps.flat());
+  }
+
   const filtered = merged.filter((m: any) => type === 'today'
     ? ['SCHEDULED', 'IN_PLAY', 'PAUSED'].includes(m.status)
     : m.status === 'FINISHED');
@@ -1027,6 +1075,18 @@ export async function GET(request: Request) {
     const uniqueCompetitions = Array.from(new Set(events.map((e: any) => e.competition?.code).filter(Boolean)));
     const oddsByCompetition = await getOddsByCompetition(uniqueCompetitions);
     events = events.map((e: any) => enrichMatch(e, oddsByCompetition));
+
+    // Final safety net: if CL or FL1 is still missing, pull it straight from TSDB.
+    const missingSafetyCodes = ['CL', 'FL1'].filter((code) => !events.some((event: any) => event.competition?.code === code));
+    if (missingSafetyCodes.length) {
+      const safetyEvents = await Promise.all(
+        missingSafetyCodes.map((code) => fetchSportsDbCompetitionNextEventsFresh(code, type === 'today' ? 0 : -21, type === 'today' ? 21 : 0, type))
+      );
+      const safetyFlat = safetyEvents.flat();
+      if (safetyFlat.length) {
+        events = dedupeEvents([...events, ...safetyFlat]).map((event: any) => enrichMatch(event, oddsByCompetition));
+      }
+    }
 
     // provide competition counts so frontend can render empty competitions
     const compsList = COMPETITIONS.map((code) => ({ code, name: COMP_INFO[code]?.name ?? code, count: events.filter((e: any) => e.competition?.code === code).length }));
