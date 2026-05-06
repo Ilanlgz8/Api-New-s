@@ -1,0 +1,8 @@
+{
+  "/api/football/route": "app/api/football/route.js",
+  "/api/crypto/route": "app/api/crypto/route.js",
+  "/api/weather/route": "app/api/weather/route.js",
+  "/api/energy/route": "app/api/energy/route.js",
+  "/page": "app/page.js",
+  "/api/news/route": "app/api/news/route.js"
+}

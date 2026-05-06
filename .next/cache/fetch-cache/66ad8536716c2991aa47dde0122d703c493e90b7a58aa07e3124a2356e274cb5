@@ -1,0 +1,1 @@
+{"kind":"FETCH","data":{"headers":{"content-type":"application/json; charset=utf-8","date":"Wed, 06 May 2026 12:34:56 GMT","server":"Microsoft-IIS/10.0","strict-transport-security":"max-age=2592000","transfer-encoding":"chunked","x-powered-by":"ASP.NET"},"body":"W10=","status":200,"url":"https://api.openligadb.de/getmatchdata/CL/2026"},"revalidate":31536000,"tags":[]}
