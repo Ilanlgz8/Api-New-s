@@ -1009,14 +1009,15 @@ export async function GET(request: Request) {
     startFootballWeeklyPrefetch();
     startDailyTsdbNextLeaguePrefetch(2);
     startDailyOddsPrefetch(3);
-    const cacheKey = `football:${type}:window:${type === 'today' ? '0:13' : '-13:0'}`;
+      // Expand window to 21 days to catch CL and other irregular-schedule leagues
+      const cacheKey = `football:${type}:window:${type === 'today' ? '0:21' : '-21:0'}`;
     const ttl = type === 'today' ? CACHE_TTL.football_today : CACHE_TTL.football_results;
 
     const { data, fromCache, age, stale } = await withStaleCache(
       cacheKey,
       ttl,
       async () => ({
-        events: await fetchFootballEventsWindow(type, type === 'today' ? 0 : -13, type === 'today' ? 13 : 0),
+          events: await fetchFootballEventsWindow(type, type === 'today' ? 0 : -21, type === 'today' ? 21 : 0),
       }),
       { events: [] }
     );
