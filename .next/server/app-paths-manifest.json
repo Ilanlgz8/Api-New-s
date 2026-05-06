@@ -1,4 +1,3 @@
 {
-  "/api/crypto/route": "app/api/crypto/route.js",
   "/api/football/route": "app/api/football/route.js"
 }

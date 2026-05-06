@@ -1,0 +1,48 @@
+{
+  "fetchedAt": 1778065200000,
+  "matches": [
+    {
+      "id": "2466175",
+      "status": "IN_PLAY",
+      "utcDate": "2026-05-06T19:00:00Z",
+      "homeTeam": {
+        "id": null,
+        "name": "Bayern Munich",
+        "shortName": "Bayern Munich",
+        "crest": null
+      },
+      "awayTeam": {
+        "id": null,
+        "name": "Paris SG",
+        "shortName": "Paris SG",
+        "crest": null
+      },
+      "competition": {
+        "code": "CL",
+        "name": "Champions League",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": 0,
+          "away": 1
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": {
+        "minute": null,
+        "source": "thesportsdb",
+        "score": {
+          "home": 0,
+          "away": 1
+        }
+      },
+      "liveSource": "thesportsdb",
+      "competitionName": "Champions League",
+      "leagueName": "Champions League"
+    }
+  ]
+}

@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import { execFile } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { CACHE_TTL, getCacheEntry, setCacheEntry, withCache, withStaleCache } from '@/lib/cache';
 import { fetchRssFeed, fetchWikipediaCompetition } from '@/lib/fallbackSources';
 import { getLiveData, startFootballPoller } from '@/lib/footballPoller';
@@ -224,6 +227,28 @@ async function fetchJsonWithTimeout(url: string, init: RequestInit, timeoutMs = 
   return res.json().catch(() => ({}));
 }
 
+async function fetchJsonWithCurl(url: string, timeoutMs = 5000) {
+  return new Promise<any>((resolve, reject) => {
+    execFile(
+      'curl',
+      ['-sL', '--max-time', String(Math.max(1, Math.ceil(timeoutMs / 1000))), url],
+      { timeout: timeoutMs + 1000 },
+      (error, stdout) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        try {
+          resolve(JSON.parse(stdout || '{}'));
+        } catch (parseError) {
+          reject(parseError);
+        }
+      }
+    );
+  });
+}
+
 function dateStr(offset = 0): string {
   const d = new Date();
   d.setDate(d.getDate() + offset);
@@ -259,9 +284,20 @@ function matchSportsDbCompetition(leagueName = '') {
 
 function mapSportsDbStatus(value = '') {
   const status = value.toLowerCase();
-  if (status.includes('finished') || status === 'ft' || status.includes('aet') || status.includes('pen')) return 'FINISHED';
-  if (status.includes('half time') || status === 'ht' || status.includes('pause') || status.includes('break')) return 'PAUSED';
-  if (status.includes('live') || status.includes('in progress') || status.includes('in play') || status.includes('1st half') || status.includes('2nd half')) return 'IN_PLAY';
+  if (status.includes('finished') || status === 'ft' || status === 'aet' || status.includes('pen')) return 'FINISHED';
+  if (status === 'ht' || status.includes('half time') || status.includes('pause') || status.includes('break')) return 'PAUSED';
+  if (
+    status === '1h' ||
+    status === '2h' ||
+    status === '3h' ||
+    status === 'live' ||
+    status.includes('in progress') ||
+    status.includes('in play') ||
+    status.includes('1st half') ||
+    status.includes('2nd half')
+  ) {
+    return 'IN_PLAY';
+  }
   return 'SCHEDULED';
 }
 
@@ -335,7 +371,7 @@ function mapSportsDbMatch(event: any) {
 
 async function fetchSportsDbEventsForDate(date: string) {
   const { data } = await withCache(`tsdb:soccer:${date}`, 10 * 60, async () => {
-    const res = await fetch(`${TSDB_BASE}/eventsday.php?d=${date}&s=Soccer`).catch(() => null);
+    const res = await fetch(`${TSDB_BASE}/eventsday.php?d=${date}&s=Soccer&_=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
     if (!res || !res.ok) return [];
     const json = await res.json().catch(() => ({}));
     return (json.events ?? [])
@@ -367,7 +403,7 @@ async function fetchSportsDbCompetitionSeasonEvents(code: string, startOffset: n
   const seasonPages = await Promise.all(
     seasons.map(async (season) => {
       const { data } = await withCache(`tsdb:season:${leagueId}:${season}`, 30 * 60, async () => {
-        const res = await fetch(`${TSDB_BASE}/eventsseason.php?id=${leagueId}&s=${season}`).catch(() => null);
+        const res = await fetch(`${TSDB_BASE}/eventsseason.php?id=${leagueId}&s=${season}&_=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
         if (!res || !res.ok) return [];
         const json = await res.json().catch(() => ({}));
         return (json.events ?? [])
@@ -413,9 +449,7 @@ async function fetchSportsDbCompetitionNextEvents(code: string, startOffset: num
   const expandedTo = dateStr(endOffset + 14);
 
   const { data } = await withCache(`tsdb:nextleague:${leagueId}`, 10 * 60, async () => {
-    const res = await fetch(`${TSDB_BASE}/eventsnextleague.php?id=${leagueId}`).catch(() => null);
-    if (!res || !res.ok) return [];
-    const json = await res.json().catch(() => ({}));
+    const json = await fetchJsonWithCurl(`${TSDB_BASE}/eventsnextleague.php?id=${leagueId}`, 5000).catch(() => ({}));
     return (json.events ?? [])
       .map(mapSportsDbMatch)
       .filter((match: any) => match !== null && match !== undefined)
@@ -445,12 +479,12 @@ async function fetchSportsDbCompetitionNextEventsFresh(code: string, startOffset
 
   const dateFrom = dateStr(startOffset);
   const expandedTo = dateStr(endOffset + 14);
-  const res = await fetch(`${TSDB_BASE}/eventsnextleague.php?id=${leagueId}`).catch(() => null);
-  if (!res || !res.ok) return [];
-
-  const json = await res.json().catch(() => ({}));
-  return (json.events ?? [])
-    .map(mapSportsDbMatch)
+  const json = await fetchJsonWithCurl(`${TSDB_BASE}/eventsnextleague.php?id=${leagueId}`, 5000).catch(() => ({}));
+  const mapped = (json.events ?? [])
+    .map((event: any) => {
+      const match = mapSportsDbMatch(event);
+      return match;
+    })
     .filter((match: any) => match !== null && match !== undefined)
     .map((match: any) => ({
       ...match,
@@ -465,6 +499,8 @@ async function fetchSportsDbCompetitionNextEventsFresh(code: string, startOffset
       return matchDate && matchDate >= dateFrom && matchDate <= expandedTo;
     })
     .filter((match: any) => String(match?.status ?? 'SCHEDULED') !== 'FINISHED');
+
+  return mapped;
 }
 
 async function fetchSportsDbWindow(startOffset: number, endOffset: number) {
@@ -588,15 +624,29 @@ async function fetchOpenLigaDbCompetitionEvents(code: string, startOffset: numbe
 }
 
 function dedupeEvents(events: any[]) {
-  const seen = new Set<string>();
-  return events.filter((event) => {
+  const seen = new Map<string, any>();
+
+  const rankStatus = (event: any) => {
+    const status = String(event?.status ?? '').toUpperCase();
+    if (status === 'IN_PLAY' || status === 'PAUSED') return 3;
+    if (status === 'SCHEDULED') return 2;
+    if (status === 'FINISHED') return 1;
+    return 0;
+  };
+
+  for (const event of events) {
     const comp = String(event?.competition?.code ?? '');
     const id = String(event?.id ?? '');
     const key = `${comp}:${id || `${event?.homeTeam?.name ?? ''}:${event?.awayTeam?.name ?? ''}:${event?.utcDate ?? ''}`}`;
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+    if (!key) continue;
+
+    const existing = seen.get(key);
+    if (!existing || rankStatus(event) >= rankStatus(existing)) {
+      seen.set(key, event);
+    }
+  }
+
+  return Array.from(seen.values());
 }
 
 async function fetchFootballDataCompetitionEvents(code: string, startOffset: number, endOffset: number, type: 'today' | 'results') {
@@ -890,7 +940,7 @@ async function getOddsByCompetition(codes: string[]) {
 
         if (!bookProbs.length) return null;
 
-        const sum = bookProbs.reduce((acc, p) => {
+        const sum = bookProbs.reduce((acc: { home: number; draw: number; away: number }, p) => {
           acc.home += p.home ?? 0;
           acc.draw += p.draw ?? 0;
           acc.away += p.away ?? 0;
@@ -1028,6 +1078,25 @@ async function fetchMatchesForStatus(status: 'IN_PLAY' | 'PAUSED' | 'SUSPENDED')
   return json.matches ?? [];
 }
 
+function readLastLiveSnapshot() {
+  try {
+    const path = join(process.cwd(), '.cache', 'football-last-live.json');
+    const data = readFileSync(path, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    return null;
+  }
+}
+
+function writeLastLiveSnapshot(payload: any) {
+  try {
+    const path = join(process.cwd(), '.cache', 'football-last-live.json');
+    writeFileSync(path, JSON.stringify(payload, null, 2));
+  } catch {
+    // silent fail - don't crash if we can't write to cache file
+  }
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') ?? 'live';
@@ -1037,18 +1106,40 @@ export async function GET(request: Request) {
     startFootballWeeklyPrefetch();
     const cached = getCacheEntry<{ matches: any[]; fetchedAt: number }>('football:live');
     const live = getLiveData();
-    const sportsDbLive = live.matches?.length
-      ? []
-      : (await fetchSportsDbWindow(0, 0)).filter((match: any) => ['IN_PLAY', 'PAUSED'].includes(match.status));
-    const payload = cached?.data?.matches?.length
-      ? cached.data
-      : live.matches?.length
-        ? live
-        : sportsDbLive.length
-          ? { matches: sportsDbLive, fetchedAt: Date.now() }
-          : { matches: [], fetchedAt: Date.now() };
+    
+    // Always try sportsDbLive for fresh data
+    let sportsDbLive: any[] = [];
+    if (!live.matches?.length) {
+      try {
+        const combined = dedupeEvents([
+          ...(await fetchSportsDbWindow(0, 0)),
+          ...(await Promise.all(
+            COMPETITIONS.map(async (code) => fetchSportsDbCompetitionNextEventsFresh(code, 0, 0, 'today'))
+          )).flat(),
+        ]).filter((match: any) => ['IN_PLAY', 'PAUSED'].includes(match.status));
+        sportsDbLive = combined;
+        
+        // If we got live matches, persist them as fallback
+        if (combined.length) {
+          writeLastLiveSnapshot({ matches: combined, fetchedAt: Date.now() });
+        }
+      } catch (e) {
+        // silent - will use fallback below
+      }
+    }
+    
+    // Fallback to last known live snapshot if both sources are empty
+    let finalMatches = 
+      cached?.data?.matches?.length 
+        ? cached.data.matches
+        : live.matches?.length
+          ? live.matches
+          : sportsDbLive.length
+            ? sportsDbLive
+            : (readLastLiveSnapshot()?.matches ?? []);
+    
     return NextResponse.json(
-      { matches: payload.matches ?? [], fetchedAt: payload.fetchedAt ?? Date.now() },
+      { matches: finalMatches, fetchedAt: Date.now() },
       { headers: { 'X-Cache': cached?.data?.matches?.length ? 'HIT' : 'STORE' } }
     );
   }
