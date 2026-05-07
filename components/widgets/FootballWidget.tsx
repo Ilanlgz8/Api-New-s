@@ -211,7 +211,8 @@ export const FootballWidget = React.memo(function FootballWidget() {
   const [activeLeague, setActiveLeague] = useState('TOUT');
   const [page, setPage] = useState(0);
   const [selectedMatch, setSelectedMatch] = useState<any>(null);
-  const { live, today, results } = useFootball();
+  const { live, today, results, refetch } = useFootball();
+  const [nowTick, setNowTick] = useState<number>(Date.now());
 
   const current = tab === 'live' ? live : tab === 'today' ? today : results;
   const rawItems = tab === 'live' ? current.data?.matches ?? [] : current.data?.events ?? [];
@@ -261,13 +262,58 @@ export const FootballWidget = React.memo(function FootballWidget() {
     }
   }, [activeLeague, allCompetitions, rawItems]);
 
-  const filteredGroups = useMemo(
+  // Client-side tick to update computed live minutes and lightweight server polling
+  useEffect(() => {
+    let tickId: ReturnType<typeof setInterval> | null = null;
+    let pollId: ReturnType<typeof setInterval> | null = null;
+
+    if (tab === 'live') {
+      // update computed minutes every 10s for smooth UI
+      tickId = setInterval(() => setNowTick(Date.now()), 10_000);
+
+      // if there are live matches, poll server for fresh live details (minute/score)
+      if ((live.data?.matches?.length ?? 0) > 0) {
+        pollId = setInterval(() => {
+          try {
+            refetch('live');
+          } catch (e) {
+            // ignore
+          }
+        }, 10_000);
+      }
+    }
+
+    return () => {
+      if (tickId) clearInterval(tickId);
+      if (pollId) clearInterval(pollId);
+    };
+  }, [tab, live.data?.matches?.length, refetch]);
+
+      const filteredGroups = useMemo(
     () => {
-      if (activeLeague === 'TOUT') return groups;
-      // Filter events by competition code instead of name
       const allEvents = tab === 'live' ? current.data?.matches ?? [] : current.data?.events ?? [];
+
+      const compareByDate = (a: any, b: any) => {
+        const dateA = new Date(a.utcDate ?? 0).getTime();
+        const dateB = new Date(b.utcDate ?? 0).getTime();
+        // For results tab we want newest first, otherwise keep ascending (closest/soonest first)
+        return tab === 'results' ? dateB - dateA : dateA - dateB;
+      };
+
+      if (activeLeague === 'TOUT') {
+        const sortedEvents = [...allEvents].sort(compareByDate);
+        return [['', sortedEvents]] as [string, any[]][];
+      }
+
+      // Filter events by competition code instead of name
       const filtered = allEvents.filter((e: any) => e.competition?.code === activeLeague);
       const grouped = groupByComp(filtered);
+
+      // Ensure matches inside each competition follow the same ordering
+      Object.keys(grouped).forEach((k) => {
+        grouped[k] = grouped[k].sort(compareByDate);
+      });
+
       return sortedGroups(grouped);
     },
     [activeLeague, groups, current.data?.competitions, current.data?.events, current.data?.matches, tab]

@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { execFile } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, unlinkSync, mkdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { CACHE_TTL, getCacheEntry, setCacheEntry, withCache, withStaleCache } from '@/lib/cache';
 import { fetchRssFeed, fetchWikipediaCompetition } from '@/lib/fallbackSources';
 import { getLiveData, startFootballPoller } from '@/lib/footballPoller';
+import { fetchSofascoreLiveMatches, fetchSofascoreFinishedMatches, mapSofascoreMatch } from '@/lib/sofascoreLive';
+import { startFlashscoreLive, getFlashscoreLiveMatches, mapFlashscoreMatch } from '@/lib/flashscoreLive';
+import { storeScore, enrichWithStoredScore } from '@/lib/scoreDatabase';
 
 export const runtime = 'nodejs';
 
@@ -85,6 +88,16 @@ const COMP_SOURCES: Record<string, string[]> = {
   SA:  ['football-data', 'api-football', 'thesportsdb', 'rss', 'wikipedia'],
 };
 
+// **DAILY PREFETCH SYSTEM** - Reduce API calls to once per day
+let lastDailyPrefetch = { date: '', timestamp: 0 };
+function getTodayDateStr(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+function isDailyPrefetchNeeded(): boolean {
+  const today = getTodayDateStr();
+  return today !== lastDailyPrefetch.date;
+}
+
 // Simple per-source rate limiting (milliseconds)
 const SOURCE_MIN_INTERVAL_MS: Record<string, number> = {
   'football-data': 500,
@@ -106,59 +119,74 @@ async function throttleFor(source: string) {
 }
 
 async function fetchCompetitionEventsByPriority(code: string, startOffset: number, endOffset: number, type: 'today' | 'results') {
+  let fallbackWithoutScore: any[] | null = null;
+  const pickCandidate = (items: any[] | null | undefined, source: keyof typeof SOURCE_STATS) => {
+    if (!items || items.length === 0) {
+      recordSourceAttempt(source, false);
+      return null;
+    }
+
+    if (type !== 'results') {
+      recordSourceAttempt(source, true);
+      return items;
+    }
+
+    const scoredFinishedCount = items.filter((e: any) => {
+      const isFinished = e.status === 'FINISHED';
+      const hasScore = e.score?.fullTime?.home !== null && e.score?.fullTime?.away !== null;
+      return isFinished && hasScore;
+    }).length;
+
+    if (scoredFinishedCount > 0) {
+      recordSourceAttempt(source, true);
+      return items;
+    }
+
+    // Keep a best-effort fallback if no source provides scored results.
+    if (!fallbackWithoutScore || items.length > fallbackWithoutScore.length) {
+      fallbackWithoutScore = items;
+    }
+    recordSourceAttempt(source, false);
+    return null;
+  };
+
   const sources = COMP_SOURCES[code] ?? ['football-data', 'api-football', 'thesportsdb'];
   for (const src of sources) {
     try {
       await throttleFor(src);
       if (src === 'football-data') {
         const res = await fetchFootballDataCompetitionEvents(code, startOffset, endOffset, type);
-        if (res && res.length) {
-          recordSourceAttempt('football-data', true);
-          return res;
-        }
-        recordSourceAttempt('football-data', false);
+        const picked = pickCandidate(res, 'football-data');
+        if (picked) return picked;
       }
       if (src === 'api-football') {
         const leagueId = AF_LEAGUE_BY_CODE[code];
         if (leagueId) {
           const res = await fetchApiFootballCompetitionEvents(code, leagueId, startOffset, endOffset, type);
-          if (res && res.length) {
-            recordSourceAttempt('api-football', true);
-            return res;
-          }
-          recordSourceAttempt('api-football', false);
+          const picked = pickCandidate(res, 'api-football');
+          if (picked) return picked;
         }
       }
       if (src === 'openligadb') {
         if (OL_LEAGUE_BY_CODE[code]) {
           const res = await fetchOpenLigaDbCompetitionEvents(code, startOffset, endOffset, type);
-          if (res && res.length) {
-            recordSourceAttempt('openligadb', true);
-            return res;
-          }
-          recordSourceAttempt('openligadb', false);
+          const picked = pickCandidate(res, 'openligadb');
+          if (picked) return picked;
         }
       }
       if (src === 'thesportsdb') {
         const nextEvents = await fetchSportsDbCompetitionNextEvents(code, startOffset, endOffset, type);
-        if (nextEvents && nextEvents.length) {
-          recordSourceAttempt('thesportsdb', true);
-          return nextEvents;
-        }
+        const pickedNext = pickCandidate(nextEvents, 'thesportsdb');
+        if (pickedNext) return pickedNext;
 
         const seasonal = await fetchSportsDbCompetitionSeasonEvents(code, startOffset, endOffset, type);
-        if (seasonal && seasonal.length) {
-          recordSourceAttempt('thesportsdb', true);
-          return seasonal;
-        }
+        const pickedSeasonal = pickCandidate(seasonal, 'thesportsdb');
+        if (pickedSeasonal) return pickedSeasonal;
 
         const all = await fetchSportsDbWindow(startOffset, endOffset);
         const filtered = (all ?? []).filter((m: any) => m.competition?.code === code);
-        if (filtered && filtered.length) {
-          recordSourceAttempt('thesportsdb', true);
-          return filtered;
-        }
-        recordSourceAttempt('thesportsdb', false);
+        const pickedAll = pickCandidate(filtered, 'thesportsdb');
+        if (pickedAll) return pickedAll;
       }
       if (src === 'rss') {
         // try known RSS feeds (best-effort)
@@ -203,7 +231,7 @@ async function fetchCompetitionEventsByPriority(code: string, startOffset: numbe
       recordSourceAttempt(src, false);
     }
   }
-  return [];
+  return fallbackWithoutScore ?? [];
 }
 
 function fdHeaders() {
@@ -247,6 +275,36 @@ async function fetchJsonWithCurl(url: string, timeoutMs = 5000) {
       }
     );
   });
+}
+
+// Retry with exponential backoff for resilience against transient errors
+// Respects free tier limits: max 3 attempts, increasing delays (500ms, 1s, 2s)
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxAttempts = 3,
+  baseDelayMs = 500
+): Promise<T> {
+  let lastError: any;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      const errMsg = (err as Error)?.message ?? '';
+      const isTransient = errMsg.includes('429') || 
+                          errMsg.includes('timeout') ||
+                          errMsg.includes('ECONNRESET') ||
+                          errMsg.includes('ETIMEDOUT');
+      if (!isTransient || attempt === maxAttempts - 1) {
+        throw err; // Don't retry non-transient errors or on last attempt
+      }
+      // Exponential backoff: 500ms, 1s, 2s
+      const delayMs = baseDelayMs * Math.pow(2, attempt);
+      console.log(`[Retry] Attempt ${attempt + 1}/${maxAttempts}, backoff ${delayMs}ms`, (err as Error)?.message?.slice(0, 80));
+      await new Promise((res) => setTimeout(res, delayMs));
+    }
+  }
+  throw lastError;
 }
 
 function dateStr(offset = 0): string {
@@ -371,7 +429,12 @@ function mapSportsDbMatch(event: any) {
 
 async function fetchSportsDbEventsForDate(date: string) {
   const { data } = await withCache(`tsdb:soccer:${date}`, 10 * 60, async () => {
-    const res = await fetch(`${TSDB_BASE}/eventsday.php?d=${date}&s=Soccer&_=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
+    // Retry on transient errors (429, timeout) with exponential backoff (max 2 attempts for this endpoint)
+    const res = await retryWithBackoff(
+      () => fetch(`${TSDB_BASE}/eventsday.php?d=${date}&s=Soccer&_=${Date.now()}`, { cache: 'no-store' }),
+      2, // Lower attempt count for this less critical endpoint
+      500
+    ).catch(() => null);
     if (!res || !res.ok) return [];
     const json = await res.json().catch(() => ({}));
     return (json.events ?? [])
@@ -403,7 +466,16 @@ async function fetchSportsDbCompetitionSeasonEvents(code: string, startOffset: n
   const seasonPages = await Promise.all(
     seasons.map(async (season) => {
       const { data } = await withCache(`tsdb:season:${leagueId}:${season}`, 30 * 60, async () => {
-        const res = await fetch(`${TSDB_BASE}/eventsseason.php?id=${leagueId}&s=${season}&_=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
+        // Retry with backoff for season events (important for CL/FL1 if nextleague returns empty)
+        const res = await retryWithBackoff(
+          async () => {
+            const r = await fetch(`${TSDB_BASE}/eventsseason.php?id=${leagueId}&s=${season}&_=${Date.now()}`, { cache: 'no-store' });
+            if (!r || !r.ok) throw new Error(`fetch failed: ${r?.status}`);
+            return r;
+          },
+          2,
+          500
+        ).catch(() => null);
         if (!res || !res.ok) return [];
         const json = await res.json().catch(() => ({}));
         return (json.events ?? [])
@@ -449,7 +521,19 @@ async function fetchSportsDbCompetitionNextEvents(code: string, startOffset: num
   const expandedTo = dateStr(endOffset + 14);
 
   const { data } = await withCache(`tsdb:nextleague:${leagueId}`, 10 * 60, async () => {
-    const json = await fetchJsonWithCurl(`${TSDB_BASE}/eventsnextleague.php?id=${leagueId}`, 5000).catch(() => ({}));
+    // Retry with backoff for resilience (max 3 attempts for critical CL/FL1 endpoint)
+    const json = await retryWithBackoff(
+      async () => {
+        const result = await fetchJsonWithCurl(`${TSDB_BASE}/eventsnextleague.php?id=${leagueId}`, 5000);
+        // If no events returned, treat as transient error and trigger retry
+        if (!result || !result.events || result.events.length === 0) {
+          throw new Error('429-empty-response');
+        }
+        return result;
+      },
+      3, // More attempts for high-value endpoint
+      500
+    ).catch(() => ({}));
     return (json.events ?? [])
       .map(mapSportsDbMatch)
       .filter((match: any) => match !== null && match !== undefined)
@@ -629,16 +713,24 @@ function dedupeEvents(events: any[]) {
   const rankStatus = (event: any) => {
     const status = String(event?.status ?? '').toUpperCase();
     if (status === 'IN_PLAY' || status === 'PAUSED') return 3;
-    if (status === 'SCHEDULED') return 2;
-    if (status === 'FINISHED') return 1;
+    if (status === 'FINISHED') return 2;
+    if (status === 'SCHEDULED') return 1;
     return 0;
   };
 
   for (const event of events) {
     const comp = String(event?.competition?.code ?? '');
+    const home = String(event?.homeTeam?.name ?? '').toLowerCase().trim();
+    const away = String(event?.awayTeam?.name ?? '').toLowerCase().trim();
+    const date = String(event?.utcDate ?? '').slice(0, 10); // YYYY-MM-DD only
     const id = String(event?.id ?? '');
-    const key = `${comp}:${id || `${event?.homeTeam?.name ?? ''}:${event?.awayTeam?.name ?? ''}:${event?.utcDate ?? ''}`}`;
-    if (!key) continue;
+    
+    // Primary key: competition + match (home/away/date) - this catches duplicates with different IDs
+    const matchKey = `${comp}:${home}:${away}:${date}`;
+    // Secondary key: use ID if no match match found
+    const key = matchKey && home && away && date ? matchKey : `${comp}:${id}`;
+    
+    if (!key || key === ':::::' || key === ':') continue;
 
     const existing = seen.get(key);
     if (!existing || rankStatus(event) >= rankStatus(existing)) {
@@ -843,6 +935,110 @@ function startDailyOddsPrefetch(hourUTC = 3) {
     void runOnce();
     setInterval(() => void runOnce(), 24 * 60 * 60 * 1000);
   }, initialDelay);
+}
+
+let clPrefetchStarted = false;
+function startFrequentClPrefetch(timesPerDay = 4) {
+  if (clPrefetchStarted) return;
+  clPrefetchStarted = true;
+
+  // Start Flashscore WebSocket for real-time updates
+  void startFlashscoreLive().catch((e) => {
+    console.warn('[Flashscore] Failed to connect:', (e as any)?.message?.slice(0, 50));
+  });
+
+  const runOnce = async () => {
+    try {
+      // Fetch from multiple sources: Sofascore (finished), Flashscore (live), and fallback APIs
+      const clResults: any[] = [];
+
+      // 1. Sofascore finished matches (most reliable for historical results)
+      try {
+        const sofascoreFinished = await fetchSofascoreFinishedMatches(7); // Expand to 7 days for CL
+        if (sofascoreFinished && sofascoreFinished.length) {
+          const clMatches = sofascoreFinished.map((m: any) => mapSofascoreMatch(m, 'CL'));
+          clResults.push(...clMatches);
+          console.log(`[CL Prefetch] Sofascore: ${clMatches.length} finished matches`);
+        }
+      } catch (e) {
+        console.warn('[CL Prefetch] Sofascore fetch failed:', (e as any)?.message?.slice(0, 50));
+      }
+
+      // 2. Flashscore live matches (real-time)
+      try {
+        const flashscoreLive = getFlashscoreLiveMatches();
+        if (flashscoreLive && flashscoreLive.length) {
+          const clMatches = flashscoreLive.map((m: any) => mapFlashscoreMatch(m, 'CL'));
+          clResults.push(...clMatches);
+          console.log(`[CL Prefetch] Flashscore: ${clMatches.length} live matches`);
+        }
+      } catch (e) {
+        console.warn('[CL Prefetch] Flashscore live failed:', (e as any)?.message?.slice(0, 50));
+      }
+
+      // 3. Try direct CL fetch from Sofascore if still no CL data
+      if (!clResults.some((e: any) => e.competition?.code === 'CL')) {
+        try {
+          const sofascoreAll = await fetchSofascoreFinishedMatches(14); // Even wider for CL
+          const clFromSofascore = sofascoreAll
+            .filter((m: any) => m.tournament?.type === 'international_club' || m.tournament?.name?.includes('Champions'))
+            .map((m: any) => mapSofascoreMatch(m, 'CL'));
+          if (clFromSofascore.length) {
+            clResults.push(...clFromSofascore);
+            console.log(`[CL Prefetch] Sofascore (direct CL): ${clFromSofascore.length} matches`);
+          }
+        } catch (e) {
+          console.warn('[CL Prefetch] Direct Sofascore fetch failed:', (e as any)?.message?.slice(0, 50));
+        }
+      }
+
+      // 4. Fallback to API sources with retry logic
+      if (!clResults.some((e: any) => e.competition?.code === 'CL')) {
+        try {
+          // Try compact request first (less rate-limit impact)
+          const clEvents = await fetchCompetitionEventsByPriority('CL', -7, 1, 'results').catch(() => []);
+          if (clEvents && clEvents.length) {
+            clResults.push(...clEvents);
+            console.log(`[CL Prefetch] API: ${clEvents.length} CL matches`);
+          }
+        } catch (e) {
+          console.warn('[CL Prefetch] API fetch failed:', (e as any)?.message?.slice(0, 50));
+        }
+      }
+
+      // Store scores in local database (cumulative, never deleted)
+      for (const match of clResults) {
+        if (match.score?.fullTime?.home !== null && match.score?.fullTime?.away !== null) {
+          storeScore(
+            match.homeTeam?.name ?? 'Home',
+            match.awayTeam?.name ?? 'Away',
+            match.competition?.code ?? 'CL',
+            match.utcDate ?? new Date().toISOString(),
+            match.score.fullTime.home,
+            match.score.fullTime.away,
+            match.source ?? 'sofascore'
+          );
+        }
+      }
+
+      // 5. Always merge CL results with existing, prioritizing newer data
+      const existing = readArchiveMerged('results') || { events: [] };
+      const allResults = dedupeEvents([...clResults, ...(existing.events ?? [])]);
+      
+      if (allResults.length > 0) {
+        writeArchiveSnapshot('results', { events: allResults, fetchedAt: Date.now() });
+        const clCount = allResults.filter((e: any) => e.competition?.code === 'CL').length;
+        console.log(`[CL Prefetch] ✓ Archived ${allResults.length} total matches (${clCount} CL)`);
+      }
+    } catch (e) {
+      console.warn('[CL Prefetch] Error', (e as any)?.message);
+    }
+  };
+
+  // Run immediately and then schedule - more frequently for CL to compensate for rate limits
+  void runOnce();
+  const ms = Math.floor((24 * 60 * 60 * 1000) / Math.max(1, timesPerDay));
+  setInterval(() => void runOnce(), ms);
 }
 
 function normalizeName(value = '') {
@@ -1079,21 +1275,191 @@ async function fetchMatchesForStatus(status: 'IN_PLAY' | 'PAUSED' | 'SUSPENDED')
 }
 
 function readLastLiveSnapshot() {
-  try {
-    const path = join(process.cwd(), '.cache', 'football-last-live.json');
-    const data = readFileSync(path, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return null;
-  }
+  return readArchiveMerged('live');
 }
 
 function writeLastLiveSnapshot(payload: any) {
+  writeArchiveSnapshot('live', payload);
+}
+
+function readLastTodaySnapshot() {
+  return readArchiveMerged('today');
+}
+
+function writeLastTodaySnapshot(payload: any) {
+  writeArchiveSnapshot('today', payload);
+}
+
+function snapshotCoverageStats(events: any[] = []) {
+  const leagues = new Set((events ?? []).map((e: any) => e?.competition?.code).filter(Boolean)).size;
+  const scored = (events ?? []).filter((e: any) => e?.score?.fullTime?.home !== null && e?.score?.fullTime?.away !== null).length;
+  return { count: events?.length ?? 0, leagues, scored };
+}
+
+function mergeTodaySnapshot(events: any[]) {
+  const existing = readLastTodaySnapshot();
+  const merged = dedupeEvents([...(existing?.events ?? []), ...(events ?? [])]);
+  const cutoff = Date.now() - 21 * 24 * 60 * 60 * 1000;
+  return merged.filter((e: any) => {
+    const t = new Date(e.utcDate ?? 0).getTime();
+    return Number.isFinite(t) && t >= cutoff;
+  });
+}
+
+function shouldPersistTodaySnapshot(currentEvents: any[] | undefined, nextEvents: any[]) {
+  const current = snapshotCoverageStats(currentEvents ?? []);
+  const next = snapshotCoverageStats(nextEvents ?? []);
+  if (!current.count) return true;
+  if (next.leagues > current.leagues) return true;
+  if (next.leagues === current.leagues && next.count >= current.count) return true;
+  if (next.scored > current.scored) return true;
+  return false;
+}
+
+function readLastResultsSnapshot() {
+  return readArchiveMerged('results');
+}
+
+function writeLastResultsSnapshot(payload: any) {
+  writeArchiveSnapshot('results', payload);
+}
+
+function mergeResultsSnapshot(events: any[]) {
+  const existing = readLastResultsSnapshot();
+  const merged = dedupeEvents([...(events ?? []), ...(existing?.events ?? [])]).map((event: any) => {
+    const match = (existing?.events ?? []).find((e: any) => e?.id === event?.id && e?.competition?.code === event?.competition?.code);
+    if (!match) return event;
+    const hasNewScore = event?.score?.fullTime?.home !== null && event?.score?.fullTime?.away !== null;
+    const hasExistingScore = match?.score?.fullTime?.home !== null && match?.score?.fullTime?.away !== null;
+    if (!hasNewScore && hasExistingScore) {
+      return { ...event, score: match.score, status: match.status === 'FINISHED' ? 'FINISHED' : event.status };
+    }
+    return event;
+  });
+  const cutoff = Date.now() - 21 * 24 * 60 * 60 * 1000;
+  const recent = merged.filter((e: any) => {
+    const t = new Date(e.utcDate ?? 0).getTime();
+    return Number.isFinite(t) && t >= cutoff;
+  });
+  return recent;
+}
+
+function selectResultsForDisplay(inputEvents: any[], now = new Date()) {
+  const finished = (inputEvents ?? [])
+    .filter((e: any) => {
+      const isFinished = e.status === 'FINISHED';
+      const inWidgetCompetitions = COMPETITIONS.includes(e.competition?.code);
+      return isFinished && inWidgetCompetitions;
+    })
+    .sort((a: any, b: any) => new Date(b.utcDate ?? 0).getTime() - new Date(a.utcDate ?? 0).getTime());
+
+  const scored = finished.filter((e: any) => {
+    const hasScore = e.score?.fullTime?.home !== null && e.score?.fullTime?.away !== null;
+    return hasScore;
+  });
+
+  const windows = [7, 14, 21];
+  for (const days of windows) {
+    const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    const candidate = scored.filter((e: any) => new Date(e.utcDate ?? 0) >= cutoff);
+    const compCount = new Set(candidate.map((e: any) => e.competition?.code).filter(Boolean)).size;
+    if (candidate.length >= 8 || compCount >= 3) {
+      return candidate.slice(0, 150);
+    }
+  }
+
+  if (scored.length > 0) {
+    return scored.slice(0, 150);
+  }
+
+  return finished.slice(0, 150);
+}
+
+// Archive helpers: write daily snapshots and prune older ones
+function ensureCacheDir() {
+  const dir = join(process.cwd(), '.cache');
   try {
-    const path = join(process.cwd(), '.cache', 'football-last-live.json');
-    writeFileSync(path, JSON.stringify(payload, null, 2));
+    const st = statSync(dir);
+    if (!st.isDirectory()) throw new Error('not dir');
+  } catch (e) {
+    try { mkdirSync(dir, { recursive: true }); } catch (er) { /* ignore */ }
+  }
+}
+
+function listArchiveFiles(prefix: string) {
+  try {
+    const dir = join(process.cwd(), '.cache');
+    return readdirSync(dir).filter((f) => f.startsWith(prefix)).map((f) => join(dir, f));
   } catch {
-    // silent fail - don't crash if we can't write to cache file
+    return [];
+  }
+}
+
+function pruneArchive(prefix: string, keepDays: number) {
+  try {
+    const files = listArchiveFiles(prefix);
+    const cutoff = Date.now() - keepDays * 24 * 60 * 60 * 1000;
+    for (const f of files) {
+      try {
+        const st = statSync(f);
+        if (st.mtimeMs < cutoff) unlinkSync(f);
+      } catch {}
+    }
+  } catch {}
+}
+
+function writeArchiveSnapshot(kind: 'live' | 'today' | 'results', payload: any) {
+  try {
+    ensureCacheDir();
+    const date = new Date().toISOString().slice(0, 10);
+    const baseName = kind === 'live' ? 'football-live' : kind === 'today' ? 'football-today' : 'football-results';
+    const dailyPath = join(process.cwd(), '.cache', `${baseName}-${date}.json`);
+    const lastPath = join(process.cwd(), '.cache', `football-last-${kind}.json`);
+    writeFileSync(dailyPath, JSON.stringify(payload, null, 2));
+    writeFileSync(lastPath, JSON.stringify(payload, null, 2));
+    // prune older files
+    pruneArchive(baseName, kind === 'live' ? 7 : kind === 'today' ? 7 : 14);
+  } catch (e) {
+    // ignore write errors
+  }
+}
+
+function readArchiveMerged(kind: 'live' | 'results' | 'today') {
+  try {
+    // prefer the single-file last snapshot for quick reads
+    const lastPath = join(process.cwd(), '.cache', `football-last-${kind}.json`);
+    let lastSnapshot: any = null;
+    try {
+      const data = readFileSync(lastPath, 'utf-8');
+      lastSnapshot = JSON.parse(data);
+    } catch {
+      // fallthrough to aggregated daily files
+    }
+
+    const baseName = kind === 'live' ? 'football-live' : kind === 'today' ? 'football-today' : 'football-results';
+    const dir = join(process.cwd(), '.cache');
+    const files = readdirSync(dir).filter((f) => f.startsWith(baseName)).sort().reverse();
+    const events: any[] = [];
+    if (lastSnapshot?.events) events.push(...lastSnapshot.events);
+    else if (lastSnapshot?.matches) events.push(...lastSnapshot.matches);
+    else if (Array.isArray(lastSnapshot)) events.push(...lastSnapshot);
+    for (const f of files) {
+      try {
+        const d = JSON.parse(readFileSync(join(dir, f), 'utf-8'));
+        if (d?.events) events.push(...d.events);
+        else if (d?.matches) events.push(...d.matches);
+        else if (Array.isArray(d)) events.push(...d);
+      } catch {}
+    }
+    // dedupe by id
+    const seen = new Map();
+    for (const e of events) {
+      const id = e.id || `${e.competition?.code}:${e.homeTeam?.name}:${e.awayTeam?.name}:${String(e.utcDate ?? '')}`;
+      if (!seen.has(id)) seen.set(id, e);
+    }
+    return { events: Array.from(seen.values()), fetchedAt: Date.now() };
+  } catch {
+    return null;
   }
 }
 
@@ -1129,14 +1495,26 @@ export async function GET(request: Request) {
     }
     
     // Fallback to last known live snapshot if both sources are empty
+    // But filter out finished matches and old matches (older than today)
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const filterLiveMatches = (matches: any[]) => 
+      matches.filter((m: any) => {
+        // Only show IN_PLAY or PAUSED matches
+        if (!['IN_PLAY', 'PAUSED', 'SUSPENDED'].includes(m.status)) return false;
+        // Only show today's matches or future
+        const matchDate = String(m.utcDate ?? '').slice(0, 10);
+        return matchDate >= todayStr;
+      });
+
     let finalMatches = 
       cached?.data?.matches?.length 
-        ? cached.data.matches
+        ? filterLiveMatches(cached.data.matches)
         : live.matches?.length
-          ? live.matches
+          ? filterLiveMatches(live.matches)
           : sportsDbLive.length
-            ? sportsDbLive
-            : (readLastLiveSnapshot()?.matches ?? []);
+            ? filterLiveMatches(sportsDbLive)
+            : filterLiveMatches((readLastLiveSnapshot()?.events ?? []) as any[]);
     
     return NextResponse.json(
       { matches: finalMatches, fetchedAt: Date.now() },
@@ -1148,6 +1526,87 @@ export async function GET(request: Request) {
     startFootballWeeklyPrefetch();
     startDailyTsdbNextLeaguePrefetch(2);
     startDailyOddsPrefetch(3);
+    // More frequent CL prefetch to ensure Champions League results availability
+    startFrequentClPrefetch(4);
+
+    // **TRIGGER DAILY PREFETCH IN BACKGROUND**
+    // Only do heavy API work once per day, then serve from snapshots
+    if (isDailyPrefetchNeeded()) {
+      lastDailyPrefetch = { date: getTodayDateStr(), timestamp: Date.now() };
+      console.log('[Prefetch] Starting daily match prefetch (background)...');
+      // Run in background - don't wait for it
+      (async () => {
+        try {
+          const todayEvents = await fetchFootballEventsWindow('today', 0, 21);
+          const resultsEvents = await fetchFootballEventsWindow('results', -21, 0);
+          
+          if (todayEvents?.length) {
+            const existing = readLastTodaySnapshot();
+            const mergedToday = mergeTodaySnapshot(todayEvents);
+            if (shouldPersistTodaySnapshot(existing?.events, mergedToday)) {
+              writeLastTodaySnapshot({ events: mergedToday, fetchedAt: Date.now() });
+              const stats = snapshotCoverageStats(mergedToday);
+              console.log(`[Prefetch] ✓ Today: ${stats.count} matches saved (${stats.leagues} leagues)`);
+            } else {
+              const current = snapshotCoverageStats(existing?.events ?? []);
+              const next = snapshotCoverageStats(mergedToday);
+              console.log(`[Prefetch] Skipped Today: existing ${current.count}/${current.leagues} vs new ${next.count}/${next.leagues}`);
+            }
+          }
+          if (resultsEvents?.length) {
+            const mergedResults = mergeResultsSnapshot(resultsEvents);
+            writeLastResultsSnapshot({ events: mergedResults, fetchedAt: Date.now() });
+            console.log(`[Prefetch] ✓ Results: ${mergedResults.length} matches saved`);
+          }
+        } catch (e) {
+          console.warn('[Prefetch] Error:', (e as any)?.message);
+        }
+      })();
+    }
+
+    // **SERVE FROM SNAPSHOTS FIRST** - Instant load, stable display
+    let snapshot = type === 'today' ? readLastTodaySnapshot() : readLastResultsSnapshot();
+    if (snapshot?.events && snapshot.events.length > 0) {
+      const now = new Date();
+      let events = snapshot.events;
+      if (type === 'today') {
+        events = [...events].sort((a: any, b: any) => {
+          const dateA = new Date(a.utcDate ?? 0).getTime();
+          const dateB = new Date(b.utcDate ?? 0).getTime();
+          return dateA - dateB;
+        });
+      } else if (type === 'results') {
+        events = selectResultsForDisplay(events, now);
+      }
+
+      events = events.map((e: any) => enrichWithStoredScore(e));
+
+      // Always serve today from snapshot; for results only bypass if severely sparse
+      if (type === 'today') {
+        console.log(`[Snapshot] Serving ${snapshot.events.length} ${type} matches from cache`);
+        const compsList = COMPETITIONS.map((code) => ({ code, name: COMP_INFO[code]?.name ?? code, count: events.filter((e: any) => e.competition?.code === code).length }));
+        return NextResponse.json(
+          { events, competitions: compsList, fetchedAt: snapshot.fetchedAt, stale: false },
+          { headers: { 'X-Cache': 'SNAPSHOT', 'X-Snapshot-Age': `${Math.round((Date.now() - snapshot.fetchedAt) / 1000)}s` } }
+        );
+      }
+
+      // For results: serve if we have decent scored coverage or multi-league minimum
+      const compCount = new Set(events.map((e: any) => e.competition?.code).filter(Boolean)).size;
+      const scoredCount = events.filter((e: any) => e.score?.fullTime?.home !== null && e.score?.fullTime?.away !== null).length;
+      if (scoredCount >= 8 || (events.length >= 12 && compCount >= 2)) {
+        console.log(`[Snapshot] Serving ${snapshot.events.length} ${type} matches from cache`);
+        const compsList = COMPETITIONS.map((code) => ({ code, name: COMP_INFO[code]?.name ?? code, count: events.filter((e: any) => e.competition?.code === code).length }));
+        return NextResponse.json(
+          { events, competitions: compsList, fetchedAt: snapshot.fetchedAt, stale: false },
+          { headers: { 'X-Cache': 'SNAPSHOT', 'X-Snapshot-Age': `${Math.round((Date.now() - snapshot.fetchedAt) / 1000)}s` } }
+        );
+      }
+
+      console.log('[Snapshot] Results snapshot insufficient, attempting fresh fetch');
+    }
+
+    // **FALLBACK: Fetch from API** (only if snapshot missing)
       // Expand window to 21 days to catch CL and other irregular-schedule leagues
       const cacheKey = `football:${type}:window:${type === 'today' ? '0:21' : '-21:0'}`;
     const ttl = type === 'today' ? CACHE_TTL.football_today : CACHE_TTL.football_results;
@@ -1161,11 +1620,14 @@ export async function GET(request: Request) {
       { events: [] }
     );
 
-    // Fetch and enrich with odds
+    // Fetch and enrich with odds + stored scores
     let events: any[] = data.events ?? [];
+    let usedFallback = false;
     const uniqueCompetitions = Array.from(new Set(events.map((e: any) => e.competition?.code).filter(Boolean)));
     const oddsByCompetition = await getOddsByCompetition(uniqueCompetitions);
-    events = events.map((e: any) => enrichMatch(e, oddsByCompetition));
+    events = events
+      .map((e: any) => enrichMatch(e, oddsByCompetition))
+      .map((e: any) => enrichWithStoredScore(e)); // Add best stored scores from local DB
 
     // Final safety net: if CL or FL1 is still missing, pull it straight from TSDB.
     const missingSafetyCodes = ['CL', 'FL1'].filter((code) => !events.some((event: any) => event.competition?.code === code));
@@ -1179,12 +1641,64 @@ export async function GET(request: Request) {
       }
     }
 
+    // If upstream returns empty, serve last known snapshot to avoid blank UI
+    if (type === 'today' && (!events || events.length === 0)) {
+      const snap = readLastTodaySnapshot();
+      if (snap?.events && snap.events.length) {
+        events = snap.events;
+        usedFallback = true;
+      }
+    }
+    if (type === 'results' && (!events || events.length === 0)) {
+      const snap = readLastResultsSnapshot();
+      if (snap?.events && snap.events.length) {
+        events = snap.events;
+        usedFallback = true;
+      }
+    }
+
+    // Persist a fresh snapshot for `today` so we can serve it when upstream fails later
+    if (type === 'today' && events && events.length) {
+      try {
+        const existing = readLastTodaySnapshot();
+        const mergedToday = mergeTodaySnapshot(events);
+        if (shouldPersistTodaySnapshot(existing?.events, mergedToday)) {
+          writeLastTodaySnapshot({ events: mergedToday, fetchedAt: Date.now() });
+        }
+      } catch (e) {
+        // ignore write failures
+      }
+    }
+
+    // Persist merged snapshot for results to avoid league dropouts on partial source failures
+    if (type === 'results' && events && events.length) {
+      try {
+        const mergedResults = mergeResultsSnapshot(events);
+        writeLastResultsSnapshot({ events: mergedResults, fetchedAt: Date.now() });
+      } catch (e) {
+        // ignore write failures
+      }
+    }
+
+    // **SORT and LIMIT matches**
+    const now = new Date();
+    if (type === 'today') {
+      // Sort by date/time ascending (closest to now first)
+      events.sort((a: any, b: any) => {
+        const dateA = new Date(a.utcDate ?? 0).getTime();
+        const dateB = new Date(b.utcDate ?? 0).getTime();
+        return dateA - dateB;
+      });
+      } else if (type === 'results') {
+        events = selectResultsForDisplay(events, now);
+    }
+
     // provide competition counts so frontend can render empty competitions
     const compsList = COMPETITIONS.map((code) => ({ code, name: COMP_INFO[code]?.name ?? code, count: events.filter((e: any) => e.competition?.code === code).length }));
 
     return NextResponse.json(
-      { ...data, events, competitions: compsList, fetchedAt: Date.now() - (fromCache ? age * 1000 : 0), stale },
-      { headers: { 'X-Cache': fromCache ? `${stale ? 'STALE' : 'HIT'} age=${age}s` : 'MISS' } }
+      { ...data, events, competitions: compsList, fetchedAt: Date.now() - (fromCache ? age * 1000 : 0), stale: stale || usedFallback },
+      { headers: { 'X-Cache': fromCache ? `${stale ? 'STALE' : 'HIT'} age=${age}s` : usedFallback ? 'FALLBACK' : 'MISS' } }
     );
   }
 

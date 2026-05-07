@@ -88,15 +88,58 @@ export async function fetchWikipediaCompetition(code: string, startOffset: numbe
     const html = await fetchText(url, 5000);
     if (!html) return [];
     const events: any[] = [];
-    const titles = Array.from(html.matchAll(/<tr[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>/gi)).slice(0, 50);
-    for (const t of titles) {
-      const left = t[1].replace(/<[^>]+>/g, '').trim();
-      const right = t[2].replace(/<[^>]+>/g, '').trim();
-      const dateMatch = (left.match(/([0-9]{4}-[0-9]{2}-[0-9]{2})/) || right.match(/([0-9]{4}-[0-9]{2}-[0-9]{2})/) || [null])[0];
+
+    // Look for table rows that contain two cells (date/teams or teams/score)
+    const rows = Array.from(html.matchAll(/<tr[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>[\s\S]*?(?:<td[^>]*>([\s\S]*?)<\/td>)?/gi)).slice(0, 500);
+    for (const r of rows) {
+      const leftRaw = (r[1] || '').replace(/<sup[\s\S]*?<\/sup>/gi, '');
+      const rightRaw = (r[2] || '').replace(/<sup[\s\S]*?<\/sup>/gi, '');
+      const extraRaw = (r[3] || '').replace(/<sup[\s\S]*?<\/sup>/gi, '');
+      const left = leftRaw.replace(/<[^>]+>/g, '').trim();
+      const right = rightRaw.replace(/<[^>]+>/g, '').trim();
+      const extra = extraRaw.replace(/<[^>]+>/g, '').trim();
+
+      // Try to find an ISO date in the row (some Wikipedia tables include machine-readable dates)
+      const dateMatchISO = (left.match(/([0-9]{4}-[0-9]{2}-[0-9]{2})/) || right.match(/([0-9]{4}-[0-9]{2}-[0-9]{2})/) || extra.match(/([0-9]{4}-[0-9]{2}-[0-9]{2})/)) || [];
+      const dateMatch = dateMatchISO[0] ?? null;
+
+      // Fallback: look for a yyyy or month names pattern (best-effort); if none, skip row
       if (!dateMatch) continue;
-      const teams = (left + ' ' + right).replace(/\s+/g, ' ').trim();
-      events.push({ id: `wiki:${code}:${dateMatch}:${teams}`, utcDate: `${dateMatch}T00:00:00Z`, homeTeam: { name: teams.split(' vs ')[0] ?? teams }, awayTeam: { name: teams.split(' vs ')[1] ?? '' }, competition: { code }, status: 'SCHEDULED' });
+
+      const combined = `${left} ${right} ${extra}`.replace(/\s+/g, ' ').trim();
+
+      // Try to extract score like '2–1' or '2-1' or HTML entity variants
+      const scoreRegex = /(\d{1,2})\s*(?:–|-|—|&#8211;|&ndash;|−)\s*(\d{1,2})/;
+      const scoreMatch = combined.match(scoreRegex);
+      const homeScore = scoreMatch ? Number(scoreMatch[1]) : null;
+      const awayScore = scoreMatch ? Number(scoreMatch[2]) : null;
+
+      // Try to split teams by common separators
+      let teams = combined;
+      const vsSplit = combined.split(/\s+v[s]?\.?\s+|\s+vs\.?\s+|\s+–\s+|\s+-\s+/i);
+      let home = teams;
+      let away = '';
+      if (vsSplit.length >= 2) {
+        home = vsSplit[0].trim();
+        away = vsSplit[1].trim();
+      }
+
+      const utcDate = `${dateMatch}T00:00:00Z`;
+      const status = homeScore !== null && awayScore !== null ? 'FINISHED' : 'SCHEDULED';
+
+      events.push({
+        id: `wiki:${code}:${dateMatch}:${home}::${away}`,
+        utcDate,
+        homeTeam: { name: home },
+        awayTeam: { name: away },
+        competition: { code },
+        status,
+        score: {
+          fullTime: { home: homeScore, away: awayScore },
+        },
+      });
     }
+    
     return events;
   });
   return data as any[];

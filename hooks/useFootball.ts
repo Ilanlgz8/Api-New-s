@@ -24,5 +24,11 @@ export function useFootball() {
     refreshInterval: REFRESH.FOOTBALL_SCHEDULE,
   });
 
-  return { live, today, results };
+  const refetch = (tab: 'live' | 'today' | 'results') => {
+    if (tab === 'live') live.mutate();
+    if (tab === 'today') today.mutate();
+    if (tab === 'results') results.mutate();
+  };
+
+  return { live, today, results, refetch };
 }
