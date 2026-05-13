@@ -327,6 +327,38 @@ function formatUpdateLabel(timestamp?: number) {
   return `Mise à jour: ${new Date(timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
 }
 
+function calculateLiveMinute(match: any, nowTick: number): string | null {
+  // Calculer la minute écoulée depuis le début du match (utcDate)
+  try {
+    const startTime = new Date(match.utcDate).getTime();
+    const elapsedSeconds = (nowTick - startTime) / 1000;
+    
+    // Si match pas commencé ou données manquantes
+    if (elapsedSeconds < 0) return null;
+    
+    const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+    
+    // Première mi-temps (0-44 minutes)
+    if (elapsedMinutes < 45) {
+      return `${elapsedMinutes}`;
+    }
+    
+    // Deuxième mi-temps et temps additionnel (45+ minutes)
+    if (elapsedMinutes >= 45 && elapsedMinutes < 90) {
+      return `${elapsedMinutes}`;
+    }
+    
+    // Après 90 minutes = temps additionnel
+    if (elapsedMinutes >= 90) {
+      return `45+${elapsedMinutes - 45}`;
+    }
+    
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
 function formatLiveMinute(match: any) {
   const raw = match.liveDetails?.minute ?? match.minute;
   if (raw == null) return null;
@@ -337,7 +369,16 @@ function formatLiveMinute(match: any) {
   return `${m}`;
 }
 
-function statusLabel(match: any) {
+function statusLabel(match: any, nowTick?: number) {
+  // Si on a nowTick (client-side), calculer la minute depuis utcDate
+  if (nowTick !== undefined) {
+    const calculatedMinute = calculateLiveMinute(match, nowTick);
+    if (match.status === 'IN_PLAY' || match.status === 'LIVE') {
+      return calculatedMinute ? `${calculatedMinute}'` : 'LIVE';
+    }
+  }
+  
+  // Fallback à l'ancienne logique si pas de nowTick ou match pas en direct
   const liveMinute = formatLiveMinute(match);
   if (match.status === 'IN_PLAY' || match.status === 'LIVE') return liveMinute ? `${liveMinute}'` : 'LIVE';
   if (match.status === 'PAUSED') return 'MT';
@@ -683,6 +724,7 @@ export const FootballWidget = React.memo(function FootballWidget() {
                       selected={selectedMatch?.id === match.id}
                       onSelect={setSelectedMatch}
                       mode={tab}
+                      nowTick={nowTick}
                     />
                   ));
                 })}
@@ -697,7 +739,7 @@ export const FootballWidget = React.memo(function FootballWidget() {
   );
 });
 
-function MatchCard({ match, selected, onSelect, mode, competitionName, competitionEmblem, showCompetitionHeader }: any) {
+function MatchCard({ match, selected, onSelect, mode, competitionName, competitionEmblem, showCompetitionHeader, nowTick }: any) {
   const isResult = mode === 'results';
 
   return (
@@ -726,7 +768,7 @@ function MatchCard({ match, selected, onSelect, mode, competitionName, competiti
       )}
       <button onClick={() => onSelect(match)} className="flex min-h-0 flex-1 flex-col text-left">
         <div className="flex min-h-0 flex-1 px-1.5 py-2">
-          <MatchFaceoff match={match} mode={mode} />
+          <MatchFaceoff match={match} mode={mode} nowTick={nowTick} />
         </div>
       </button>
 
@@ -744,20 +786,18 @@ function MatchCard({ match, selected, onSelect, mode, competitionName, competiti
   );
 }
 
-function MatchFaceoff({ match, mode, compact }: { match: any; mode: Tab; compact?: boolean }) {
+function MatchFaceoff({ match, mode, compact, nowTick }: { match: any; mode: Tab; compact?: boolean; nowTick?: number }) {
   const homeScore = scoreOf(match, 'home');
   const awayScore = scoreOf(match, 'away');
   const center =
     mode === 'today'
       ? { top: smartDate(match.utcDate), main: formatTime(match.utcDate) }
       : mode === 'live'
-        ? { top: statusLabel(match), main: `${homeScore ?? 0}-${awayScore ?? 0}` }
+        ? { top: statusLabel(match, nowTick), main: `${homeScore ?? 0}-${awayScore ?? 0}` }
         : { top: smartDate(match.utcDate), main: `${homeScore ?? '-'}-${awayScore ?? '-'}` };
   const liveSourceLabel = match.liveSource === 'sofascore'
     ? 'Sofascore live'
-    : match.liveSource
-      ? 'Football-data live'
-      : '';
+    : '';
 
   return (
     <div className={clsx('grid flex-1 grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center gap-2 overflow-hidden', !compact && 'gap-1.5')}>
