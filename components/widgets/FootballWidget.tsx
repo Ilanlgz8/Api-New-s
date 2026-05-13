@@ -348,8 +348,9 @@ function calculateLiveMinute(match: any, nowTick: number): string | null {
       return `45+${elapsedMinutes - 45}`;
     }
 
-    // Après la mi-temps, on retire la coupure pour revenir au temps de jeu réel.
-    const footballMinutes = elapsedMinutes - 15;
+    // Après la mi-temps, on retire la coupure et on décale d'une minute pour
+    // que la reprise s'affiche à 46' comme dans les broadcasts classiques.
+    const footballMinutes = elapsedMinutes - 14;
 
     if (footballMinutes <= 90) {
       return `${footballMinutes}`;
