@@ -1,0 +1,38 @@
+{
+  "app/page.tsx -> @/components/ui/ThemeToggle": {
+    "id": "app/page.tsx -> @/components/ui/ThemeToggle",
+    "files": [
+      "static/chunks/_app-pages-browser_components_ui_ThemeToggle_tsx.js"
+    ]
+  },
+  "app/page.tsx -> @/components/widgets/CryptoWidget": {
+    "id": "app/page.tsx -> @/components/widgets/CryptoWidget",
+    "files": [
+      "static/chunks/_app-pages-browser_components_widgets_CryptoWidget_tsx.js"
+    ]
+  },
+  "app/page.tsx -> @/components/widgets/EnergyWidget": {
+    "id": "app/page.tsx -> @/components/widgets/EnergyWidget",
+    "files": [
+      "static/chunks/_app-pages-browser_components_widgets_EnergyWidget_tsx.js"
+    ]
+  },
+  "app/page.tsx -> @/components/widgets/FootballWidget": {
+    "id": "app/page.tsx -> @/components/widgets/FootballWidget",
+    "files": [
+      "static/chunks/_app-pages-browser_components_widgets_FootballWidget_tsx.js"
+    ]
+  },
+  "app/page.tsx -> @/components/widgets/NewsWidget": {
+    "id": "app/page.tsx -> @/components/widgets/NewsWidget",
+    "files": [
+      "static/chunks/_app-pages-browser_components_widgets_NewsWidget_tsx.js"
+    ]
+  },
+  "app/page.tsx -> @/components/widgets/WeatherWidget": {
+    "id": "app/page.tsx -> @/components/widgets/WeatherWidget",
+    "files": [
+      "static/chunks/_app-pages-browser_components_widgets_WeatherWidget_tsx.js"
+    ]
+  }
+}
