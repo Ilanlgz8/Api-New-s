@@ -338,9 +338,18 @@ function calculateLiveMinute(match: any, nowTick: number): string | null {
     
     const elapsedMinutes = Math.floor(elapsedSeconds / 60);
 
-    // On enlève la pause de mi-temps pour que la 2e période reparte vers 45'
-    // au lieu de 60'+ sur le chrono réel.
-    const footballMinutes = elapsedMinutes >= 60 ? elapsedMinutes - 15 : elapsedMinutes;
+    // 0-44: minute normale.
+    if (elapsedMinutes < 45) {
+      return `${elapsedMinutes}`;
+    }
+
+    // 45-59: temps additionnel de la 1re mi-temps.
+    if (elapsedMinutes < 60) {
+      return `45+${elapsedMinutes - 45}`;
+    }
+
+    // Après la mi-temps, on retire la coupure pour revenir au temps de jeu réel.
+    const footballMinutes = elapsedMinutes - 15;
 
     if (footballMinutes <= 90) {
       return `${footballMinutes}`;
