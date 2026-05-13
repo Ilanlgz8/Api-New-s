@@ -337,23 +337,16 @@ function calculateLiveMinute(match: any, nowTick: number): string | null {
     if (elapsedSeconds < 0) return null;
     
     const elapsedMinutes = Math.floor(elapsedSeconds / 60);
-    
-    // Première mi-temps (0-44 minutes)
-    if (elapsedMinutes < 45) {
-      return `${elapsedMinutes}`;
+
+    // On enlève la pause de mi-temps pour que la 2e période reparte vers 45'
+    // au lieu de 60'+ sur le chrono réel.
+    const footballMinutes = elapsedMinutes >= 60 ? elapsedMinutes - 15 : elapsedMinutes;
+
+    if (footballMinutes <= 90) {
+      return `${footballMinutes}`;
     }
-    
-    // Deuxième mi-temps et temps additionnel (45+ minutes)
-    if (elapsedMinutes >= 45 && elapsedMinutes < 90) {
-      return `${elapsedMinutes}`;
-    }
-    
-    // Après 90 minutes = temps additionnel
-    if (elapsedMinutes >= 90) {
-      return `45+${elapsedMinutes - 45}`;
-    }
-    
-    return null;
+
+    return `90+${footballMinutes - 90}`;
   } catch (e) {
     return null;
   }
@@ -370,6 +363,8 @@ function formatLiveMinute(match: any) {
 }
 
 function statusLabel(match: any, nowTick?: number) {
+  if (match.status === 'PAUSED') return 'MT';
+
   // Si on a nowTick (client-side), calculer la minute depuis utcDate
   if (nowTick !== undefined) {
     const calculatedMinute = calculateLiveMinute(match, nowTick);
@@ -381,7 +376,6 @@ function statusLabel(match: any, nowTick?: number) {
   // Fallback à l'ancienne logique si pas de nowTick ou match pas en direct
   const liveMinute = formatLiveMinute(match);
   if (match.status === 'IN_PLAY' || match.status === 'LIVE') return liveMinute ? `${liveMinute}'` : 'LIVE';
-  if (match.status === 'PAUSED') return 'MT';
   if (match.status === 'FINISHED') return 'FIN';
   return `${smartDate(match.utcDate)} ${formatTime(match.utcDate)}`;
 }
