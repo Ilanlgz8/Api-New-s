@@ -1,47 +1,38 @@
 {
   "app/page.tsx -> @/components/ui/ThemeToggle": {
-    "id": 8962,
+    "id": "app/page.tsx -> @/components/ui/ThemeToggle",
     "files": [
-      "static/chunks/962.fc9a0831b694633b.js"
+      "static/chunks/_app-pages-browser_components_ui_ThemeToggle_tsx.js"
     ]
   },
   "app/page.tsx -> @/components/widgets/CryptoWidget": {
-    "id": 4523,
+    "id": "app/page.tsx -> @/components/widgets/CryptoWidget",
     "files": [
-      "static/chunks/123.bad1d382b31e460b.js",
-      "static/chunks/964.6bbef258dc2d7f43.js",
-      "static/chunks/821.e6915d7691e7cd41.js",
-      "static/chunks/523.5003952ee2ee7902.js"
+      "static/chunks/_app-pages-browser_components_widgets_CryptoWidget_tsx.js"
     ]
   },
   "app/page.tsx -> @/components/widgets/EnergyWidget": {
-    "id": 5699,
+    "id": "app/page.tsx -> @/components/widgets/EnergyWidget",
     "files": [
-      "static/chunks/123.bad1d382b31e460b.js",
-      "static/chunks/964.6bbef258dc2d7f43.js",
-      "static/chunks/153.1bcb8a0585fae6d4.js",
-      "static/chunks/699.939575462e34fae0.js"
+      "static/chunks/_app-pages-browser_components_widgets_EnergyWidget_tsx.js"
     ]
   },
   "app/page.tsx -> @/components/widgets/FootballWidget": {
-    "id": 4857,
+    "id": "app/page.tsx -> @/components/widgets/FootballWidget",
     "files": [
-      "static/chunks/123.bad1d382b31e460b.js",
-      "static/chunks/857.0b7cef1f34d1e7ad.js"
+      "static/chunks/_app-pages-browser_components_widgets_FootballWidget_tsx.js"
     ]
   },
   "app/page.tsx -> @/components/widgets/NewsWidget": {
-    "id": 9175,
+    "id": "app/page.tsx -> @/components/widgets/NewsWidget",
     "files": [
-      "static/chunks/123.bad1d382b31e460b.js",
-      "static/chunks/175.7465ff4cda056468.js"
+      "static/chunks/_app-pages-browser_components_widgets_NewsWidget_tsx.js"
     ]
   },
   "app/page.tsx -> @/components/widgets/WeatherWidget": {
-    "id": 6090,
+    "id": "app/page.tsx -> @/components/widgets/WeatherWidget",
     "files": [
-      "static/chunks/123.bad1d382b31e460b.js",
-      "static/chunks/90.fe6d22e40943f15e.js"
+      "static/chunks/_app-pages-browser_components_widgets_WeatherWidget_tsx.js"
     ]
   }
 }

@@ -106,6 +106,41 @@
       "leagueName": "Georgian Erovnuli Liga"
     },
     {
+      "id": "2296856",
+      "status": "SCHEDULED",
+      "utcDate": "2026-05-28T17:00:00Z",
+      "homeTeam": {
+        "id": "146495",
+        "name": "Traiskirchen",
+        "shortName": "Traiskirchen",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/r9wbeq1743353980.png"
+      },
+      "awayTeam": {
+        "id": "146491",
+        "name": "Neusiedl am See",
+        "shortName": "Neusiedl am See",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/miyoyb1743353637.png"
+      },
+      "competition": {
+        "code": "tsdb:5317",
+        "name": "Austrian Regionalliga Ost",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/nba99s1659092395.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Austrian Regionalliga Ost",
+      "leagueName": "Austrian Regionalliga Ost"
+    },
+    {
       "id": "2285773",
       "status": "SCHEDULED",
       "utcDate": "2026-05-29T16:30:00Z",
@@ -209,6 +244,76 @@
       "liveDetails": null,
       "competitionName": "Austrian Regionalliga Mitte",
       "leagueName": "Austrian Regionalliga Mitte"
+    },
+    {
+      "id": "2280456",
+      "status": "SCHEDULED",
+      "utcDate": "2026-05-30T14:15:00Z",
+      "homeTeam": {
+        "id": "144243",
+        "name": "Ceuta",
+        "shortName": "Ceuta",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ja7sl51677475273.png"
+      },
+      "awayTeam": {
+        "id": "134232",
+        "name": "Albacete",
+        "shortName": "Albacete",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/17oqja1616436316.png"
+      },
+      "competition": {
+        "code": "PD",
+        "name": "LaLiga",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/r7u6821688425700.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "LaLiga",
+      "leagueName": "LaLiga"
+    },
+    {
+      "id": "2280458",
+      "status": "SCHEDULED",
+      "utcDate": "2026-05-30T14:15:00Z",
+      "homeTeam": {
+        "id": "138160",
+        "name": "Real Sociedad B",
+        "shortName": "Real Sociedad B",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/hliq4n1579632023.png"
+      },
+      "awayTeam": {
+        "id": "135888",
+        "name": "Cultural Leonesa",
+        "shortName": "Cultural Leonesa",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/yk28a51677472494.png"
+      },
+      "competition": {
+        "code": "PD",
+        "name": "LaLiga",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/r7u6821688425700.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "LaLiga",
+      "leagueName": "LaLiga"
     },
     {
       "id": "2286029",
@@ -351,6 +456,41 @@
       "leagueName": "UEFA Champions League"
     },
     {
+      "id": "2280455",
+      "status": "SCHEDULED",
+      "utcDate": "2026-05-30T19:00:00Z",
+      "homeTeam": {
+        "id": "133721",
+        "name": "Granada",
+        "shortName": "Granada",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/f9iss11677472689.png"
+      },
+      "awayTeam": {
+        "id": "133723",
+        "name": "Sporting de Gijón",
+        "shortName": "Sporting de Gijón",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/xxrtqx1473503054.png"
+      },
+      "competition": {
+        "code": "PD",
+        "name": "LaLiga",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/r7u6821688425700.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "LaLiga",
+      "leagueName": "LaLiga"
+    },
+    {
       "id": "2277517",
       "status": "SCHEDULED",
       "utcDate": "2026-05-31T15:00:00Z",
@@ -456,6 +596,111 @@
       "leagueName": "Bosnian Premier Liga"
     },
     {
+      "id": "2280449",
+      "status": "SCHEDULED",
+      "utcDate": "2026-05-31T16:30:00Z",
+      "homeTeam": {
+        "id": "133737",
+        "name": "Real Zaragoza",
+        "shortName": "Real Zaragoza",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/sxpwxs1473503702.png"
+      },
+      "awayTeam": {
+        "id": "133736",
+        "name": "Málaga",
+        "shortName": "Málaga",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/upqyvr1473502952.png"
+      },
+      "competition": {
+        "code": "PD",
+        "name": "LaLiga",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/r7u6821688425700.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "LaLiga",
+      "leagueName": "LaLiga"
+    },
+    {
+      "id": "2280451",
+      "status": "SCHEDULED",
+      "utcDate": "2026-05-31T16:30:00Z",
+      "homeTeam": {
+        "id": "138161",
+        "name": "Burgos",
+        "shortName": "Burgos",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/79h3ul1708150894.png"
+      },
+      "awayTeam": {
+        "id": "138280",
+        "name": "FC Andorra",
+        "shortName": "FC Andorra",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/eyaka21639481902.png"
+      },
+      "competition": {
+        "code": "PD",
+        "name": "LaLiga",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/r7u6821688425700.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "LaLiga",
+      "leagueName": "LaLiga"
+    },
+    {
+      "id": "2280450",
+      "status": "SCHEDULED",
+      "utcDate": "2026-05-31T19:00:00Z",
+      "homeTeam": {
+        "id": "134627",
+        "name": "Córdoba",
+        "shortName": "Córdoba",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ttyyvy1473503827.png"
+      },
+      "awayTeam": {
+        "id": "135454",
+        "name": "Huesca",
+        "shortName": "Huesca",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/tuxusx1447590509.png"
+      },
+      "competition": {
+        "code": "PD",
+        "name": "LaLiga",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/r7u6821688425700.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "LaLiga",
+      "leagueName": "LaLiga"
+    },
+    {
       "id": "2413019",
       "status": "SCHEDULED",
       "utcDate": "2026-06-01T00:00:00Z",
@@ -489,6 +734,76 @@
       "liveDetails": null,
       "competitionName": "Chile Primera Division",
       "leagueName": "Chile Primera Division"
+    },
+    {
+      "id": "2287925",
+      "status": "SCHEDULED",
+      "utcDate": "2026-06-01T14:00:00Z",
+      "homeTeam": {
+        "id": "134392",
+        "name": "Chornomorets Odesa",
+        "shortName": "Chornomorets Odesa",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/uvvsyw1447696161.png"
+      },
+      "awayTeam": {
+        "id": "142825",
+        "name": "Metalist Kharkiv",
+        "shortName": "Metalist Kharkiv",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/90gjfl1626439280.png"
+      },
+      "competition": {
+        "code": "tsdb:4677",
+        "name": "Ukrainian First League",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/z1ab4e1598292674.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Ukrainian First League",
+      "leagueName": "Ukrainian First League"
+    },
+    {
+      "id": "2287926",
+      "status": "SCHEDULED",
+      "utcDate": "2026-06-01T14:00:00Z",
+      "homeTeam": {
+        "id": "138438",
+        "name": "Ahrobiznes Volochysk",
+        "shortName": "Ahrobiznes Volochysk",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/of7n3m1598284001.png"
+      },
+      "awayTeam": {
+        "id": "146858",
+        "name": "Chernihiv",
+        "shortName": "Chernihiv",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ev1z4f1699461675.png"
+      },
+      "competition": {
+        "code": "tsdb:4677",
+        "name": "Ukrainian First League",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/z1ab4e1598292674.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Ukrainian First League",
+      "leagueName": "Ukrainian First League"
     },
     {
       "id": "2413227",
@@ -876,6 +1191,41 @@
       "leagueName": "Austrian Regionalliga West"
     },
     {
+      "id": "2286040",
+      "status": "SCHEDULED",
+      "utcDate": "2026-06-04T15:00:00Z",
+      "homeTeam": {
+        "id": "148683",
+        "name": "Kitzbühel",
+        "shortName": "Kitzbühel",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/dqdilj1720337791.png"
+      },
+      "awayTeam": {
+        "id": "147508",
+        "name": "St. Johann",
+        "shortName": "St. Johann",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/8cmwsy1689239635.png"
+      },
+      "competition": {
+        "code": "tsdb:5316",
+        "name": "Austrian Regionalliga West",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/dimo7o1659092429.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Austrian Regionalliga West",
+      "leagueName": "Austrian Regionalliga West"
+    },
+    {
       "id": "2285781",
       "status": "SCHEDULED",
       "utcDate": "2026-06-05T16:30:00Z",
@@ -960,6 +1310,111 @@
         "name": "Deutschlandsberger",
         "shortName": "Deutschlandsberger",
         "crest": "https://r2.thesportsdb.com/images/media/team/badge/qvz2c41657897087.png"
+      },
+      "competition": {
+        "code": "tsdb:5318",
+        "name": "Austrian Regionalliga Mitte",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/zjzc0t1659092383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Austrian Regionalliga Mitte",
+      "leagueName": "Austrian Regionalliga Mitte"
+    },
+    {
+      "id": "2285784",
+      "status": "SCHEDULED",
+      "utcDate": "2026-06-05T16:30:00Z",
+      "homeTeam": {
+        "id": "146478",
+        "name": "Junge Wikinger Ried",
+        "shortName": "Junge Wikinger Ried",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/nau62e1657897100.png"
+      },
+      "awayTeam": {
+        "id": "139420",
+        "name": "Lafnitz",
+        "shortName": "Lafnitz",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/4h947g1722795264.png"
+      },
+      "competition": {
+        "code": "tsdb:5318",
+        "name": "Austrian Regionalliga Mitte",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/zjzc0t1659092383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Austrian Regionalliga Mitte",
+      "leagueName": "Austrian Regionalliga Mitte"
+    },
+    {
+      "id": "2285785",
+      "status": "SCHEDULED",
+      "utcDate": "2026-06-05T16:30:00Z",
+      "homeTeam": {
+        "id": "146479",
+        "name": "Treibach",
+        "shortName": "Treibach",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/rguqto1657897101.png"
+      },
+      "awayTeam": {
+        "id": "139421",
+        "name": "LASK Amateure OÖ",
+        "shortName": "LASK Amateure OÖ",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/6xy8nu1752085540.png"
+      },
+      "competition": {
+        "code": "tsdb:5318",
+        "name": "Austrian Regionalliga Mitte",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/zjzc0t1659092383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Austrian Regionalliga Mitte",
+      "leagueName": "Austrian Regionalliga Mitte"
+    },
+    {
+      "id": "2285786",
+      "status": "SCHEDULED",
+      "utcDate": "2026-06-05T16:30:00Z",
+      "homeTeam": {
+        "id": "146480",
+        "name": "Union Gurten",
+        "shortName": "Union Gurten",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/g5njnh1657897103.png"
+      },
+      "awayTeam": {
+        "id": "146482",
+        "name": "Weiz",
+        "shortName": "Weiz",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/d06vma1657897107.png"
       },
       "competition": {
         "code": "tsdb:5318",
@@ -1205,6 +1660,41 @@
         "name": "Bischofshofen",
         "shortName": "Bischofshofen",
         "crest": "https://r2.thesportsdb.com/images/media/team/badge/s50uay1689239621.png"
+      },
+      "competition": {
+        "code": "tsdb:5316",
+        "name": "Austrian Regionalliga West",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/dimo7o1659092429.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Austrian Regionalliga West",
+      "leagueName": "Austrian Regionalliga West"
+    },
+    {
+      "id": "2286048",
+      "status": "SCHEDULED",
+      "utcDate": "2026-06-07T15:00:00Z",
+      "homeTeam": {
+        "id": "147503",
+        "name": "Kufstein",
+        "shortName": "Kufstein",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/i01xty1689239625.png"
+      },
+      "awayTeam": {
+        "id": "152545",
+        "name": "Lustenau",
+        "shortName": "Lustenau",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/r5ki3q1752130695.png"
       },
       "competition": {
         "code": "tsdb:5316",
@@ -4201,6 +4691,76 @@
       "leagueName": "American USL League One"
     },
     {
+      "id": "2398831",
+      "status": "SCHEDULED",
+      "utcDate": "2026-07-06T17:00:00Z",
+      "homeTeam": {
+        "id": "134170",
+        "name": "Brommapojkarna",
+        "shortName": "Brommapojkarna",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/nwr81l1639779730.png"
+      },
+      "awayTeam": {
+        "id": "134725",
+        "name": "GAIS",
+        "shortName": "GAIS",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/3pahks1639779139.png"
+      },
+      "competition": {
+        "code": "tsdb:4347",
+        "name": "Swedish Allsvenskan",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/denok11707459183.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Swedish Allsvenskan",
+      "leagueName": "Swedish Allsvenskan"
+    },
+    {
+      "id": "2398835",
+      "status": "SCHEDULED",
+      "utcDate": "2026-07-06T17:00:00Z",
+      "homeTeam": {
+        "id": "134160",
+        "name": "Hacken",
+        "shortName": "Hacken",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/zyl9m01523905866.png"
+      },
+      "awayTeam": {
+        "id": "134162",
+        "name": "Djurgården",
+        "shortName": "Djurgården",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/yuuwru1425411493.png"
+      },
+      "competition": {
+        "code": "tsdb:4347",
+        "name": "Swedish Allsvenskan",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/denok11707459183.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Swedish Allsvenskan",
+      "leagueName": "Swedish Allsvenskan"
+    },
+    {
       "id": "2419676",
       "status": "SCHEDULED",
       "utcDate": "2026-07-06T19:15:00Z",
@@ -4656,6 +5216,76 @@
       "leagueName": "Irish Premier Division"
     },
     {
+      "id": "2398844",
+      "status": "SCHEDULED",
+      "utcDate": "2026-07-11T13:00:00Z",
+      "homeTeam": {
+        "id": "134164",
+        "name": "Mjällby",
+        "shortName": "Mjällby",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ruwqxv1430239112.png"
+      },
+      "awayTeam": {
+        "id": "134011",
+        "name": "AIK",
+        "shortName": "AIK",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/rwsrxq1420769503.png"
+      },
+      "competition": {
+        "code": "tsdb:4347",
+        "name": "Swedish Allsvenskan",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/denok11707459183.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Swedish Allsvenskan",
+      "leagueName": "Swedish Allsvenskan"
+    },
+    {
+      "id": "2398845",
+      "status": "SCHEDULED",
+      "utcDate": "2026-07-11T15:30:00Z",
+      "homeTeam": {
+        "id": "135668",
+        "name": "Örgryte",
+        "shortName": "Örgryte",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ssprqx1473540098.png"
+      },
+      "awayTeam": {
+        "id": "134160",
+        "name": "Hacken",
+        "shortName": "Hacken",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/zyl9m01523905866.png"
+      },
+      "competition": {
+        "code": "tsdb:4347",
+        "name": "Swedish Allsvenskan",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/denok11707459183.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Swedish Allsvenskan",
+      "leagueName": "Swedish Allsvenskan"
+    },
+    {
       "id": "2404919",
       "status": "SCHEDULED",
       "utcDate": "2026-07-11T20:00:00Z",
@@ -4761,20 +5391,20 @@
       "leagueName": "Argentinian Primera B Nacional"
     },
     {
-      "id": "2398839",
+      "id": "2398842",
       "status": "SCHEDULED",
-      "utcDate": "2026-07-12T14:30:00Z",
+      "utcDate": "2026-07-12T12:00:00Z",
       "homeTeam": {
-        "id": "134170",
-        "name": "Brommapojkarna",
-        "shortName": "Brommapojkarna",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/nwr81l1639779730.png"
+        "id": "134731",
+        "name": "Hammarby",
+        "shortName": "Hammarby",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/3kgg5b1592144695.png"
       },
       "awayTeam": {
-        "id": "134724",
-        "name": "Sirius",
-        "shortName": "Sirius",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/yryyvr1429976751.png"
+        "id": "134002",
+        "name": "Kalmar",
+        "shortName": "Kalmar",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/3tnu4i1688449562.png"
       },
       "competition": {
         "code": "tsdb:4347",
@@ -4810,6 +5440,41 @@
         "name": "Halmstad",
         "shortName": "Halmstad",
         "crest": "https://r2.thesportsdb.com/images/media/team/badge/26hnaj1639778271.png"
+      },
+      "competition": {
+        "code": "tsdb:4347",
+        "name": "Swedish Allsvenskan",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/denok11707459183.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Swedish Allsvenskan",
+      "leagueName": "Swedish Allsvenskan"
+    },
+    {
+      "id": "2398839",
+      "status": "SCHEDULED",
+      "utcDate": "2026-07-12T14:30:00Z",
+      "homeTeam": {
+        "id": "134170",
+        "name": "Brommapojkarna",
+        "shortName": "Brommapojkarna",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/nwr81l1639779730.png"
+      },
+      "awayTeam": {
+        "id": "134724",
+        "name": "Sirius",
+        "shortName": "Sirius",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/yryyvr1429976751.png"
       },
       "competition": {
         "code": "tsdb:4347",
@@ -5389,6 +6054,41 @@
       "liveDetails": null,
       "competitionName": "American Major League Soccer",
       "leagueName": "American Major League Soccer"
+    },
+    {
+      "id": "2398853",
+      "status": "SCHEDULED",
+      "utcDate": "2026-07-17T17:00:00Z",
+      "homeTeam": {
+        "id": "134164",
+        "name": "Mjällby",
+        "shortName": "Mjällby",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ruwqxv1430239112.png"
+      },
+      "awayTeam": {
+        "id": "136832",
+        "name": "Västerås",
+        "shortName": "Västerås",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/mscha61644586515.png"
+      },
+      "competition": {
+        "code": "tsdb:4347",
+        "name": "Swedish Allsvenskan",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/denok11707459183.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Swedish Allsvenskan",
+      "leagueName": "Swedish Allsvenskan"
     },
     {
       "id": "2397213",
@@ -8071,251 +8771,6 @@
       "leagueName": "Austrian Regionalliga West"
     },
     {
-      "id": "2296856",
-      "status": "SCHEDULED",
-      "utcDate": "2026-05-28T17:00:00Z",
-      "homeTeam": {
-        "id": "146495",
-        "name": "Traiskirchen",
-        "shortName": "Traiskirchen",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/r9wbeq1743353980.png"
-      },
-      "awayTeam": {
-        "id": "146491",
-        "name": "Neusiedl am See",
-        "shortName": "Neusiedl am See",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/miyoyb1743353637.png"
-      },
-      "competition": {
-        "code": "tsdb:5317",
-        "name": "Austrian Regionalliga Ost",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/nba99s1659092395.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Austrian Regionalliga Ost",
-      "leagueName": "Austrian Regionalliga Ost"
-    },
-    {
-      "id": "2280456",
-      "status": "SCHEDULED",
-      "utcDate": "2026-05-30T14:15:00Z",
-      "homeTeam": {
-        "id": "144243",
-        "name": "Ceuta",
-        "shortName": "Ceuta",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ja7sl51677475273.png"
-      },
-      "awayTeam": {
-        "id": "134232",
-        "name": "Albacete",
-        "shortName": "Albacete",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/17oqja1616436316.png"
-      },
-      "competition": {
-        "code": "PD",
-        "name": "LaLiga",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/r7u6821688425700.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "LaLiga",
-      "leagueName": "LaLiga"
-    },
-    {
-      "id": "2280458",
-      "status": "SCHEDULED",
-      "utcDate": "2026-05-30T14:15:00Z",
-      "homeTeam": {
-        "id": "138160",
-        "name": "Real Sociedad B",
-        "shortName": "Real Sociedad B",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/hliq4n1579632023.png"
-      },
-      "awayTeam": {
-        "id": "135888",
-        "name": "Cultural Leonesa",
-        "shortName": "Cultural Leonesa",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/yk28a51677472494.png"
-      },
-      "competition": {
-        "code": "PD",
-        "name": "LaLiga",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/r7u6821688425700.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "LaLiga",
-      "leagueName": "LaLiga"
-    },
-    {
-      "id": "2280455",
-      "status": "SCHEDULED",
-      "utcDate": "2026-05-30T19:00:00Z",
-      "homeTeam": {
-        "id": "133721",
-        "name": "Granada",
-        "shortName": "Granada",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/f9iss11677472689.png"
-      },
-      "awayTeam": {
-        "id": "133723",
-        "name": "Sporting de Gijón",
-        "shortName": "Sporting de Gijón",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/xxrtqx1473503054.png"
-      },
-      "competition": {
-        "code": "PD",
-        "name": "LaLiga",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/r7u6821688425700.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "LaLiga",
-      "leagueName": "LaLiga"
-    },
-    {
-      "id": "2280449",
-      "status": "SCHEDULED",
-      "utcDate": "2026-05-31T16:30:00Z",
-      "homeTeam": {
-        "id": "133737",
-        "name": "Real Zaragoza",
-        "shortName": "Real Zaragoza",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/sxpwxs1473503702.png"
-      },
-      "awayTeam": {
-        "id": "133736",
-        "name": "Málaga",
-        "shortName": "Málaga",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/upqyvr1473502952.png"
-      },
-      "competition": {
-        "code": "PD",
-        "name": "LaLiga",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/r7u6821688425700.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "LaLiga",
-      "leagueName": "LaLiga"
-    },
-    {
-      "id": "2280451",
-      "status": "SCHEDULED",
-      "utcDate": "2026-05-31T16:30:00Z",
-      "homeTeam": {
-        "id": "138161",
-        "name": "Burgos",
-        "shortName": "Burgos",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/79h3ul1708150894.png"
-      },
-      "awayTeam": {
-        "id": "138280",
-        "name": "FC Andorra",
-        "shortName": "FC Andorra",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/eyaka21639481902.png"
-      },
-      "competition": {
-        "code": "PD",
-        "name": "LaLiga",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/r7u6821688425700.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "LaLiga",
-      "leagueName": "LaLiga"
-    },
-    {
-      "id": "2280450",
-      "status": "SCHEDULED",
-      "utcDate": "2026-05-31T19:00:00Z",
-      "homeTeam": {
-        "id": "134627",
-        "name": "Córdoba",
-        "shortName": "Córdoba",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ttyyvy1473503827.png"
-      },
-      "awayTeam": {
-        "id": "135454",
-        "name": "Huesca",
-        "shortName": "Huesca",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/tuxusx1447590509.png"
-      },
-      "competition": {
-        "code": "PD",
-        "name": "LaLiga",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/r7u6821688425700.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "LaLiga",
-      "leagueName": "LaLiga"
-    },
-    {
       "id": "2287923",
       "status": "SCHEDULED",
       "utcDate": "2026-06-01T14:00:00Z",
@@ -8330,76 +8785,6 @@
         "name": "Viktoriya Sumy",
         "shortName": "Viktoriya Sumy",
         "crest": "https://r2.thesportsdb.com/images/media/team/badge/4fcemw1690271509.png"
-      },
-      "competition": {
-        "code": "tsdb:4677",
-        "name": "Ukrainian First League",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/z1ab4e1598292674.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Ukrainian First League",
-      "leagueName": "Ukrainian First League"
-    },
-    {
-      "id": "2287925",
-      "status": "SCHEDULED",
-      "utcDate": "2026-06-01T14:00:00Z",
-      "homeTeam": {
-        "id": "134392",
-        "name": "Chornomorets Odesa",
-        "shortName": "Chornomorets Odesa",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/uvvsyw1447696161.png"
-      },
-      "awayTeam": {
-        "id": "142825",
-        "name": "Metalist Kharkiv",
-        "shortName": "Metalist Kharkiv",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/90gjfl1626439280.png"
-      },
-      "competition": {
-        "code": "tsdb:4677",
-        "name": "Ukrainian First League",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/z1ab4e1598292674.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Ukrainian First League",
-      "leagueName": "Ukrainian First League"
-    },
-    {
-      "id": "2287926",
-      "status": "SCHEDULED",
-      "utcDate": "2026-06-01T14:00:00Z",
-      "homeTeam": {
-        "id": "138438",
-        "name": "Ahrobiznes Volochysk",
-        "shortName": "Ahrobiznes Volochysk",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/of7n3m1598284001.png"
-      },
-      "awayTeam": {
-        "id": "146858",
-        "name": "Chernihiv",
-        "shortName": "Chernihiv",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ev1z4f1699461675.png"
       },
       "competition": {
         "code": "tsdb:4677",
@@ -8561,356 +8946,6 @@
       "leagueName": "Austrian Regionalliga Mitte"
     },
     {
-      "id": "2286040",
-      "status": "SCHEDULED",
-      "utcDate": "2026-06-04T15:00:00Z",
-      "homeTeam": {
-        "id": "148683",
-        "name": "Kitzbühel",
-        "shortName": "Kitzbühel",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/dqdilj1720337791.png"
-      },
-      "awayTeam": {
-        "id": "147508",
-        "name": "St. Johann",
-        "shortName": "St. Johann",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/8cmwsy1689239635.png"
-      },
-      "competition": {
-        "code": "tsdb:5316",
-        "name": "Austrian Regionalliga West",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/dimo7o1659092429.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Austrian Regionalliga West",
-      "leagueName": "Austrian Regionalliga West"
-    },
-    {
-      "id": "2285784",
-      "status": "SCHEDULED",
-      "utcDate": "2026-06-05T16:30:00Z",
-      "homeTeam": {
-        "id": "146478",
-        "name": "Junge Wikinger Ried",
-        "shortName": "Junge Wikinger Ried",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/nau62e1657897100.png"
-      },
-      "awayTeam": {
-        "id": "139420",
-        "name": "Lafnitz",
-        "shortName": "Lafnitz",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/4h947g1722795264.png"
-      },
-      "competition": {
-        "code": "tsdb:5318",
-        "name": "Austrian Regionalliga Mitte",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/zjzc0t1659092383.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Austrian Regionalliga Mitte",
-      "leagueName": "Austrian Regionalliga Mitte"
-    },
-    {
-      "id": "2285785",
-      "status": "SCHEDULED",
-      "utcDate": "2026-06-05T16:30:00Z",
-      "homeTeam": {
-        "id": "146479",
-        "name": "Treibach",
-        "shortName": "Treibach",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/rguqto1657897101.png"
-      },
-      "awayTeam": {
-        "id": "139421",
-        "name": "LASK Amateure OÖ",
-        "shortName": "LASK Amateure OÖ",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/6xy8nu1752085540.png"
-      },
-      "competition": {
-        "code": "tsdb:5318",
-        "name": "Austrian Regionalliga Mitte",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/zjzc0t1659092383.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Austrian Regionalliga Mitte",
-      "leagueName": "Austrian Regionalliga Mitte"
-    },
-    {
-      "id": "2285786",
-      "status": "SCHEDULED",
-      "utcDate": "2026-06-05T16:30:00Z",
-      "homeTeam": {
-        "id": "146480",
-        "name": "Union Gurten",
-        "shortName": "Union Gurten",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/g5njnh1657897103.png"
-      },
-      "awayTeam": {
-        "id": "146482",
-        "name": "Weiz",
-        "shortName": "Weiz",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/d06vma1657897107.png"
-      },
-      "competition": {
-        "code": "tsdb:5318",
-        "name": "Austrian Regionalliga Mitte",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/zjzc0t1659092383.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Austrian Regionalliga Mitte",
-      "leagueName": "Austrian Regionalliga Mitte"
-    },
-    {
-      "id": "2286048",
-      "status": "SCHEDULED",
-      "utcDate": "2026-06-07T15:00:00Z",
-      "homeTeam": {
-        "id": "147503",
-        "name": "Kufstein",
-        "shortName": "Kufstein",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/i01xty1689239625.png"
-      },
-      "awayTeam": {
-        "id": "152545",
-        "name": "Lustenau",
-        "shortName": "Lustenau",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/r5ki3q1752130695.png"
-      },
-      "competition": {
-        "code": "tsdb:5316",
-        "name": "Austrian Regionalliga West",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/dimo7o1659092429.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Austrian Regionalliga West",
-      "leagueName": "Austrian Regionalliga West"
-    },
-    {
-      "id": "2398831",
-      "status": "SCHEDULED",
-      "utcDate": "2026-07-06T17:00:00Z",
-      "homeTeam": {
-        "id": "134170",
-        "name": "Brommapojkarna",
-        "shortName": "Brommapojkarna",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/nwr81l1639779730.png"
-      },
-      "awayTeam": {
-        "id": "134725",
-        "name": "GAIS",
-        "shortName": "GAIS",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/3pahks1639779139.png"
-      },
-      "competition": {
-        "code": "tsdb:4347",
-        "name": "Swedish Allsvenskan",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/denok11707459183.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Swedish Allsvenskan",
-      "leagueName": "Swedish Allsvenskan"
-    },
-    {
-      "id": "2398835",
-      "status": "SCHEDULED",
-      "utcDate": "2026-07-06T17:00:00Z",
-      "homeTeam": {
-        "id": "134160",
-        "name": "Hacken",
-        "shortName": "Hacken",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/zyl9m01523905866.png"
-      },
-      "awayTeam": {
-        "id": "134162",
-        "name": "Djurgården",
-        "shortName": "Djurgården",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/yuuwru1425411493.png"
-      },
-      "competition": {
-        "code": "tsdb:4347",
-        "name": "Swedish Allsvenskan",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/denok11707459183.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Swedish Allsvenskan",
-      "leagueName": "Swedish Allsvenskan"
-    },
-    {
-      "id": "2398844",
-      "status": "SCHEDULED",
-      "utcDate": "2026-07-11T13:00:00Z",
-      "homeTeam": {
-        "id": "134164",
-        "name": "Mjällby",
-        "shortName": "Mjällby",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ruwqxv1430239112.png"
-      },
-      "awayTeam": {
-        "id": "134011",
-        "name": "AIK",
-        "shortName": "AIK",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/rwsrxq1420769503.png"
-      },
-      "competition": {
-        "code": "tsdb:4347",
-        "name": "Swedish Allsvenskan",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/denok11707459183.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Swedish Allsvenskan",
-      "leagueName": "Swedish Allsvenskan"
-    },
-    {
-      "id": "2398845",
-      "status": "SCHEDULED",
-      "utcDate": "2026-07-11T15:30:00Z",
-      "homeTeam": {
-        "id": "135668",
-        "name": "Örgryte",
-        "shortName": "Örgryte",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ssprqx1473540098.png"
-      },
-      "awayTeam": {
-        "id": "134160",
-        "name": "Hacken",
-        "shortName": "Hacken",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/zyl9m01523905866.png"
-      },
-      "competition": {
-        "code": "tsdb:4347",
-        "name": "Swedish Allsvenskan",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/denok11707459183.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Swedish Allsvenskan",
-      "leagueName": "Swedish Allsvenskan"
-    },
-    {
-      "id": "2398842",
-      "status": "SCHEDULED",
-      "utcDate": "2026-07-12T12:00:00Z",
-      "homeTeam": {
-        "id": "134731",
-        "name": "Hammarby",
-        "shortName": "Hammarby",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/3kgg5b1592144695.png"
-      },
-      "awayTeam": {
-        "id": "134002",
-        "name": "Kalmar",
-        "shortName": "Kalmar",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/3tnu4i1688449562.png"
-      },
-      "competition": {
-        "code": "tsdb:4347",
-        "name": "Swedish Allsvenskan",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/denok11707459183.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": null,
-          "away": null
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Swedish Allsvenskan",
-      "leagueName": "Swedish Allsvenskan"
-    },
-    {
       "id": "2398840",
       "status": "SCHEDULED",
       "utcDate": "2026-07-13T17:00:00Z",
@@ -8946,20 +8981,55 @@
       "leagueName": "Swedish Allsvenskan"
     },
     {
-      "id": "2398853",
+      "id": "2405301",
       "status": "SCHEDULED",
-      "utcDate": "2026-07-17T17:00:00Z",
+      "utcDate": "2026-07-20T15:00:00Z",
       "homeTeam": {
-        "id": "134164",
-        "name": "Mjällby",
-        "shortName": "Mjällby",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ruwqxv1430239112.png"
+        "id": "134328",
+        "name": "TPS",
+        "shortName": "TPS",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/c7ta7c1576077399.png"
       },
       "awayTeam": {
-        "id": "136832",
-        "name": "Västerås",
-        "shortName": "Västerås",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/mscha61644586515.png"
+        "id": "136687",
+        "name": "Ilves",
+        "shortName": "Ilves",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/jhx8vm1578953713.png"
+      },
+      "competition": {
+        "code": "tsdb:4636",
+        "name": "Finnish Veikkausliiga",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/s9v1tg1742782748.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Finnish Veikkausliiga",
+      "leagueName": "Finnish Veikkausliiga"
+    },
+    {
+      "id": "2398852",
+      "status": "SCHEDULED",
+      "utcDate": "2026-07-20T17:00:00Z",
+      "homeTeam": {
+        "id": "134002",
+        "name": "Kalmar",
+        "shortName": "Kalmar",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/3tnu4i1688449562.png"
+      },
+      "awayTeam": {
+        "id": "134166",
+        "name": "Malmo FF",
+        "shortName": "Malmo FF",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/wvvuqs1420764546.png"
       },
       "competition": {
         "code": "tsdb:4347",
@@ -8979,7 +9049,147 @@
       "liveDetails": null,
       "competitionName": "Swedish Allsvenskan",
       "leagueName": "Swedish Allsvenskan"
+    },
+    {
+      "id": "2398854",
+      "status": "SCHEDULED",
+      "utcDate": "2026-07-20T17:00:00Z",
+      "homeTeam": {
+        "id": "135668",
+        "name": "Örgryte",
+        "shortName": "Örgryte",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ssprqx1473540098.png"
+      },
+      "awayTeam": {
+        "id": "134162",
+        "name": "Djurgården",
+        "shortName": "Djurgården",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/yuuwru1425411493.png"
+      },
+      "competition": {
+        "code": "tsdb:4347",
+        "name": "Swedish Allsvenskan",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/denok11707459183.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Swedish Allsvenskan",
+      "leagueName": "Swedish Allsvenskan"
+    },
+    {
+      "id": "2397222",
+      "status": "SCHEDULED",
+      "utcDate": "2026-07-22T23:00:00Z",
+      "homeTeam": {
+        "id": "147061",
+        "name": "Lexington SC",
+        "shortName": "Lexington SC",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/whrnkt1674118711.png"
+      },
+      "awayTeam": {
+        "id": "141177",
+        "name": "Oakland Roots",
+        "shortName": "Oakland Roots",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/vzzkkj1616767958.png"
+      },
+      "competition": {
+        "code": "tsdb:4684",
+        "name": "American USL Championship",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/uh4zas1688513782.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "American USL Championship",
+      "leagueName": "American USL Championship"
+    },
+    {
+      "id": "2397561",
+      "status": "SCHEDULED",
+      "utcDate": "2026-07-22T23:00:00Z",
+      "homeTeam": {
+        "id": "150326",
+        "name": "Portland Hearts of Pine",
+        "shortName": "Portland Hearts of Pine",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/h2lpqz1734777861.png"
+      },
+      "awayTeam": {
+        "id": "142165",
+        "name": "Union Omaha",
+        "shortName": "Union Omaha",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/adjk5w1625369337.png"
+      },
+      "competition": {
+        "code": "tsdb:5076",
+        "name": "American USL League One",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/wupe6s1625336127.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "American USL League One",
+      "leagueName": "American USL League One"
+    },
+    {
+      "id": "2397563",
+      "status": "SCHEDULED",
+      "utcDate": "2026-07-22T23:00:00Z",
+      "homeTeam": {
+        "id": "150328",
+        "name": "Westchester SC",
+        "shortName": "Westchester SC",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/wme3ka1734778306.png"
+      },
+      "awayTeam": {
+        "id": "135409",
+        "name": "New York Cosmos",
+        "shortName": "New York Cosmos",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/3i15tm1765558192.png"
+      },
+      "competition": {
+        "code": "tsdb:5076",
+        "name": "American USL League One",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/wupe6s1625336127.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "American USL League One",
+      "leagueName": "American USL League One"
     }
   ],
-  "fetchedAt": 1779917223538
+  "fetchedAt": 1779918543663
 }

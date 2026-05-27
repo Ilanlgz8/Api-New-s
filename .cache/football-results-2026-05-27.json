@@ -433,111 +433,6 @@
       "publicOdds": null
     },
     {
-      "id": "2265408",
-      "status": "FINISHED",
-      "utcDate": "2026-05-22T18:45:00Z",
-      "homeTeam": {
-        "id": "133674",
-        "name": "Fiorentina",
-        "shortName": "Fiorentina",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/hc8nhu1656098030.png"
-      },
-      "awayTeam": {
-        "id": "134782",
-        "name": "Atalanta",
-        "shortName": "Atalanta",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/lrvxg71534873930.png"
-      },
-      "competition": {
-        "code": "SA",
-        "name": "Serie A",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/67q3q21679951383.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": 1,
-          "away": 1
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Serie A",
-      "leagueName": "Serie A"
-    },
-    {
-      "id": "2273288",
-      "status": "FINISHED",
-      "utcDate": "2026-05-22T16:15:00Z",
-      "homeTeam": {
-        "id": "134019",
-        "name": "Hajduk Split",
-        "shortName": "Hajduk Split",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/23mvtk1579955412.png"
-      },
-      "awayTeam": {
-        "id": "146467",
-        "name": "Vukovar",
-        "shortName": "Vukovar",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/vwsbht1657803379.png"
-      },
-      "competition": {
-        "code": "tsdb:4629",
-        "name": "Croatian First Football League",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/b3svsa1686819371.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": 6,
-          "away": 3
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Croatian First Football League",
-      "leagueName": "Croatian First Football League"
-    },
-    {
-      "id": "2273289",
-      "status": "FINISHED",
-      "utcDate": "2026-05-22T14:00:00Z",
-      "homeTeam": {
-        "id": "134041",
-        "name": "Osijek",
-        "shortName": "Osijek",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/kly3v31578830575.png"
-      },
-      "awayTeam": {
-        "id": "133989",
-        "name": "Slaven Belupo Koprivnica",
-        "shortName": "Slaven Belupo Koprivnica",
-        "crest": "https://r2.thesportsdb.com/images/media/team/badge/r8yo3a1672950533.png"
-      },
-      "competition": {
-        "code": "tsdb:4629",
-        "name": "Croatian First Football League",
-        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/b3svsa1686819371.png"
-      },
-      "score": {
-        "fullTime": {
-          "home": 2,
-          "away": 0
-        },
-        "halfTime": {
-          "home": null,
-          "away": null
-        }
-      },
-      "liveDetails": null,
-      "competitionName": "Croatian First Football League",
-      "leagueName": "Croatian First Football League"
-    },
-    {
       "id": "2277515",
       "status": "FINISHED",
       "utcDate": "2026-05-21T18:30:00Z",
@@ -1699,6 +1594,111 @@
       "publicOdds": null
     },
     {
+      "id": "2265408",
+      "status": "FINISHED",
+      "utcDate": "2026-05-22T18:45:00Z",
+      "homeTeam": {
+        "id": "133674",
+        "name": "Fiorentina",
+        "shortName": "Fiorentina",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/hc8nhu1656098030.png"
+      },
+      "awayTeam": {
+        "id": "134782",
+        "name": "Atalanta",
+        "shortName": "Atalanta",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/lrvxg71534873930.png"
+      },
+      "competition": {
+        "code": "SA",
+        "name": "Serie A",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/67q3q21679951383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 1,
+          "away": 1
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Serie A",
+      "leagueName": "Serie A"
+    },
+    {
+      "id": "2273288",
+      "status": "FINISHED",
+      "utcDate": "2026-05-22T16:15:00Z",
+      "homeTeam": {
+        "id": "134019",
+        "name": "Hajduk Split",
+        "shortName": "Hajduk Split",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/23mvtk1579955412.png"
+      },
+      "awayTeam": {
+        "id": "146467",
+        "name": "Vukovar",
+        "shortName": "Vukovar",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/vwsbht1657803379.png"
+      },
+      "competition": {
+        "code": "tsdb:4629",
+        "name": "Croatian First Football League",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/b3svsa1686819371.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 6,
+          "away": 3
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Croatian First Football League",
+      "leagueName": "Croatian First Football League"
+    },
+    {
+      "id": "2273289",
+      "status": "FINISHED",
+      "utcDate": "2026-05-22T14:00:00Z",
+      "homeTeam": {
+        "id": "134041",
+        "name": "Osijek",
+        "shortName": "Osijek",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/kly3v31578830575.png"
+      },
+      "awayTeam": {
+        "id": "133989",
+        "name": "Slaven Belupo Koprivnica",
+        "shortName": "Slaven Belupo Koprivnica",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/r8yo3a1672950533.png"
+      },
+      "competition": {
+        "code": "tsdb:4629",
+        "name": "Croatian First Football League",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/b3svsa1686819371.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 2,
+          "away": 0
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Croatian First Football League",
+      "leagueName": "Croatian First Football League"
+    },
+    {
       "id": "2470477",
       "status": "SCHEDULED",
       "utcDate": "2026-05-30T16:00:00Z",
@@ -2594,7 +2594,227 @@
       "liveDetails": null,
       "competitionName": "Italian Serie A",
       "leagueName": "Italian Serie A"
+    },
+    {
+      "id": "wiki:CL:2025-06-17:Second qualifying round 18 June 2025::",
+      "utcDate": "2025-06-17T00:00:00Z",
+      "homeTeam": {
+        "name": "Second qualifying round 18 June 2025"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "SCHEDULED",
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2025-07-20:Third qualifying round 21 July 2025::",
+      "utcDate": "2025-07-20T00:00:00Z",
+      "homeTeam": {
+        "name": "Third qualifying round 21 July 2025"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "SCHEDULED",
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2025-10-21:Matchday 3 21–22 October 2025::",
+      "utcDate": "2025-10-21T00:00:00Z",
+      "homeTeam": {
+        "name": "Matchday 3 21–22 October 2025"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "FINISHED",
+      "score": {
+        "fullTime": {
+          "home": 21,
+          "away": 22
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2025-11-04:Matchday 4 4–5 November 2025::",
+      "utcDate": "2025-11-04T00:00:00Z",
+      "homeTeam": {
+        "name": "Matchday 4 4–5 November 2025"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "FINISHED",
+      "score": {
+        "fullTime": {
+          "home": 4,
+          "away": 5
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2025-11-25:Matchday 5 25–26 November 2025::",
+      "utcDate": "2025-11-25T00:00:00Z",
+      "homeTeam": {
+        "name": "Matchday 5 25–26 November 2025"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "FINISHED",
+      "score": {
+        "fullTime": {
+          "home": 25,
+          "away": 26
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2025-12-09:Matchday 6 9–10 December 2025::",
+      "utcDate": "2025-12-09T00:00:00Z",
+      "homeTeam": {
+        "name": "Matchday 6 9–10 December 2025"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "FINISHED",
+      "score": {
+        "fullTime": {
+          "home": 9,
+          "away": 10
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2026-01-20:Matchday 7 20–21 January 2026::",
+      "utcDate": "2026-01-20T00:00:00Z",
+      "homeTeam": {
+        "name": "Matchday 7 20–21 January 2026"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "FINISHED",
+      "score": {
+        "fullTime": {
+          "home": 20,
+          "away": 21
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2026-01-27:Matchday 8 28 January 2026::",
+      "utcDate": "2026-01-27T00:00:00Z",
+      "homeTeam": {
+        "name": "Matchday 8 28 January 2026"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "SCHEDULED",
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2026-02-26:Round of 16 27 February 2026::",
+      "utcDate": "2026-02-26T00:00:00Z",
+      "homeTeam": {
+        "name": "Round of 16 27 February 2026"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "SCHEDULED",
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2026-04-28:Semi-finals 28–29 April 2026::",
+      "utcDate": "2026-04-28T00:00:00Z",
+      "homeTeam": {
+        "name": "Semi-finals 28–29 April 2026"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "FINISHED",
+      "score": {
+        "fullTime": {
+          "home": 28,
+          "away": 29
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2026-05-29:Final 30 May 2026 at Puskás Aréna, Budapest::",
+      "utcDate": "2026-05-29T00:00:00Z",
+      "homeTeam": {
+        "name": "Final 30 May 2026 at Puskás Aréna, Budapest"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "SCHEDULED",
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        }
+      }
     }
   ],
-  "fetchedAt": 1779917777368
+  "fetchedAt": 1779918599887
 }
