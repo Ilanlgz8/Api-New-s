@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withCache, CACHE_TTL } from '@/lib/cache';
+import type { CryptoCoin } from '@/lib/cryptoTypes';
 
 export const runtime = 'nodejs';
 
@@ -9,6 +10,30 @@ const COINS = [
   { symbol: 'SOLEUR', name: 'Solana',   id: 'solana'   },
   { symbol: 'XRPEUR', name: 'XRP',      id: 'xrp'      },
   { symbol: 'DOGEEUR',name: 'Dogecoin', id: 'dogecoin' },
+];
+
+type BinanceTicker = {
+  symbol: string;
+  lastPrice?: string;
+  priceChangePercent?: string;
+  highPrice?: string;
+  lowPrice?: string;
+  quoteVolume?: string;
+};
+
+type BinanceKline = [
+  number,
+  string,
+  string,
+  string,
+  string,
+  string,
+  number,
+  string,
+  number,
+  string,
+  string,
+  string,
 ];
 
 export async function GET() {
@@ -37,11 +62,11 @@ export async function GET() {
 
       return COINS.map((coin, i) => {
         const t = Array.isArray(tickers)
-          ? tickers.find((x: any) => x.symbol === coin.symbol) ?? {}
+          ? tickers.find((x: BinanceTicker) => x.symbol === coin.symbol) ?? {}
           : {};
-        const sparkline = (klinesResults[i] as any[]).map((k: any) => parseFloat(k[4]));
+          const sparkline = (klinesResults[i] as BinanceKline[]).map((k) => parseFloat(k[4]));
 
-        return {
+          const result: CryptoCoin = {
           id:                           coin.id,
           symbol:                       coin.symbol.replace('EUR', '').toLowerCase(),
           name:                         coin.name,
@@ -53,14 +78,17 @@ export async function GET() {
           total_volume:                 parseFloat(t.quoteVolume ?? '0'),
           sparkline_in_7d:              { price: sparkline },
         };
+
+        return result;
       });
     });
 
     return NextResponse.json(data, {
       headers: { 'X-Cache': fromCache ? `HIT age=${age}s` : 'MISS' },
     });
-  } catch (error: any) {
-    console.error('Binance API error:', error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Binance API error:', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

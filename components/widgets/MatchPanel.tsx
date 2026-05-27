@@ -4,11 +4,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
 import { X } from 'lucide-react';
+import type { FootballEvent } from '@/lib/footballTypes';
 
 const BEBAS: React.CSSProperties = { fontFamily: "'Bebas Neue', monospace" };
 
 interface MatchPanelProps {
-  match: any;
+  match: FootballEvent;
   onClose: () => void;
 }
 

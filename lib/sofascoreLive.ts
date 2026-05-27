@@ -165,6 +165,105 @@ export async function fetchSofascoreFinishedMatches(daysBack = 3) {
   });
 }
 
+export async function fetchSofascoreFinishedMatchesForCompetition(daysBack = 3, competitionMatcher = 'ligue') {
+  const matches: any[] = [];
+
+  for (let day = 0; day <= daysBack; day++) {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() - day);
+    const dateStr = targetDate.toISOString().slice(0, 10);
+
+    const cacheKey = `sofascore:finished:${competitionMatcher}:${dateStr}`;
+    const { data } = await withCache(cacheKey, 60 * 60, async () => {
+      try {
+        const dateRes = await fetchSofascoreJson(`/sport/football/events/${dateStr}`);
+        if (!dateRes?.events) return [];
+
+        const filtered = (dateRes.events ?? [])
+          .filter((m: any) => m.status?.code === 2 && (m.tournament?.name || '').toLowerCase().includes(competitionMatcher.toLowerCase()))
+          .map((m: any) => ({
+            sofascoreId: m.id,
+            homeTeam: m.homeTeam?.name ?? 'Home',
+            awayTeam: m.awayTeam?.name ?? 'Away',
+            homeScore: m.homeScore?.current ?? m.homeScore?.display ?? null,
+            awayScore: m.awayScore?.current ?? m.awayScore?.display ?? null,
+            utcDate: m.startTimestamp ? new Date(m.startTimestamp * 1000).toISOString() : `${dateStr}T20:00:00Z`,
+            tournament: m.tournament?.name ?? competitionMatcher,
+            source: 'sofascore',
+          }));
+
+        return filtered;
+      } catch (e) {
+        return [];
+      }
+    });
+
+    if (data && data.length) matches.push(...data);
+  }
+
+  const seen = new Set<number>();
+  return matches.filter((m) => {
+    if (seen.has(m.sofascoreId)) return false;
+    seen.add(m.sofascoreId);
+    return true;
+  });
+}
+
+export async function fetchSofascoreCompetitionWindow(code: string, startOffset: number, endOffset: number, type: 'today' | 'results') {
+  const matcher = code === 'FL1' ? 'ligue' : code === 'CL' ? 'champions' : '';
+  const matches: any[] = [];
+  const start = startOffset;
+  const end = endOffset;
+  for (let day = start; day <= end; day++) {
+    const target = new Date();
+    target.setDate(target.getDate() + day);
+    const dateStr = target.toISOString().slice(0, 10);
+
+    const cacheKey = `sofascore:window:${matcher}:${dateStr}`;
+    const { data } = await withCache(cacheKey, 60 * 60, async () => {
+      try {
+        const dateRes = await fetchSofascoreJson(`/sport/football/events/${dateStr}`);
+        if (!dateRes?.events) return [];
+        const filtered = (dateRes.events ?? []).filter((m: any) => {
+          const name = (m.tournament?.name ?? '').toLowerCase();
+          if (!matcher) return false;
+          const matchesName = name.includes(matcher);
+          if (!matchesName) return false;
+          // For results only include finished
+          if (type === 'results') return m.status?.code === 2;
+          // For today/upcoming include scheduled or in play
+          return m.status?.code === 0 || m.status?.code === 1;
+        }).map((m: any) => ({
+          sofascoreId: m.id,
+          homeTeam: m.homeTeam?.name ?? 'Home',
+          awayTeam: m.awayTeam?.name ?? 'Away',
+          homeScore: m.homeScore?.current ?? m.homeScore?.display ?? null,
+          awayScore: m.awayScore?.current ?? m.awayScore?.display ?? null,
+          minute: m.currentPeriodStartTimestamp ? Math.floor((Date.now() - m.currentPeriodStartTimestamp * 1000) / 60000) : null,
+          utcDate: m.startTimestamp ? new Date(m.startTimestamp * 1000).toISOString() : `${dateStr}T20:00:00Z`,
+          tournament: m.tournament?.name ?? matcher,
+          statusCode: m.status?.code,
+          source: 'sofascore',
+        }));
+
+        return filtered;
+      } catch (e) {
+        return [];
+      }
+    });
+
+    if (data && data.length) matches.push(...data);
+  }
+
+  // Map to standard match objects
+  const seen = new Set<number>();
+  return matches.filter((m) => {
+    if (seen.has(m.sofascoreId)) return false;
+    seen.add(m.sofascoreId);
+    return true;
+  }).map((m) => mapSofascoreMatch(m, code === 'FL1' ? 'FL1' : code === 'CL' ? 'CL' : code));
+}
+
 /**
  * Convert Sofascore match to standard match object
  */
@@ -178,7 +277,6 @@ export function mapSofascoreMatch(m: any, competition = 'CL') {
   };
 
   const status = statusMap[m.statusCode] || 'SCHEDULED';
-
   return {
     id: `sofascore:${m.sofascoreId}`,
     status,
@@ -214,5 +312,7 @@ export function mapSofascoreMatch(m: any, competition = 'CL') {
     source: 'sofascore',
   };
 }
+// Export internal fetch helper for tests
+export { fetchSofascoreJson as __fetchSofascoreJson };
 
 export default {};

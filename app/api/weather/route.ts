@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withCache, CACHE_TTL } from '@/lib/cache';
+import { errorMessage } from '@/lib/apiRouteError';
+import type { WeatherApiResponse } from '@/lib/weatherTypes';
 
 export const runtime = 'nodejs';
 
@@ -15,7 +17,7 @@ export async function GET(request: Request) {
   const cacheKey = `weather:${city ?? `${lat},${lon}`}`;
 
   try {
-    const { data, fromCache, age } = await withCache(cacheKey, CACHE_TTL.weather, async () => {
+    const { data, fromCache, age } = await withCache<WeatherApiResponse>(cacheKey, CACHE_TTL.weather, async () => {
       const baseUrl = 'https://api.openweathermap.org/data/2.5';
       const params = city ? `q=${city}` : `lat=${lat}&lon=${lon}`;
       const common = `${params}&appid=${apiKey}&units=metric&lang=fr`;
@@ -38,7 +40,7 @@ export async function GET(request: Request) {
     return NextResponse.json(data, {
       headers: { 'X-Cache': fromCache ? `HIT age=${age}s` : 'MISS' },
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: errorMessage(error) }, { status: 500 });
   }
 }

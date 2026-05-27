@@ -5,6 +5,7 @@ import { Wind, Droplets, Thermometer, MapPin, Search } from 'lucide-react';
 import { useWeather } from '@/hooks/useWeather';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { WidgetSkeleton, ErrorCard } from '@/components/ui/Skeleton';
+import type { WeatherApiResponse, WeatherForecastItem } from '@/lib/weatherTypes';
 
 const WEATHER_ICONS: Record<string, string> = {
   Clear: '☀️', Clouds: '☁️', Rain: '🌧️', Drizzle: '🌦️',
@@ -85,7 +86,7 @@ export const WeatherWidget = React.memo(function WeatherWidget() {
   );
 });
 
-const WeatherContent = React.memo(function WeatherContent({ data }: { data: any }) {
+const WeatherContent = React.memo(function WeatherContent({ data }: { data: WeatherApiResponse }) {
   const { current, forecast } = data;
   const icon = WEATHER_ICONS[current.weather[0].main] ?? '🌡️';
 
@@ -129,7 +130,7 @@ const WeatherContent = React.memo(function WeatherContent({ data }: { data: any 
         <div>
           <div className="text-xs font-mono uppercase tracking-widest text-text-secondary/60 mb-3">Prévisions 6h</div>
           <div className="flex gap-2 overflow-x-auto pb-2">
-            {forecast.list.slice(0, 6).map((item: any, i: number) => (
+            {forecast.list.slice(0, 6).map((item: WeatherForecastItem, i: number) => (
               <div 
                 key={i} 
                 className="flex-shrink-0 bg-gradient-to-br from-bg-hover/60 to-bg-accent/30 border border-border/50 rounded-xl p-3 min-w-[56px] text-center hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
