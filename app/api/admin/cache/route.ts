@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { deleteCacheEntry } from '@/lib/cache';
+import { errorMessage } from '@/lib/apiRouteError';
 
 export const runtime = 'nodejs';
 
@@ -20,7 +21,8 @@ export async function POST(request: Request) {
     if (!key) return NextResponse.json({ error: 'key missing' }, { status: 400 });
     const ok = deleteCacheEntry(key);
     return NextResponse.json({ key, deleted: ok });
-  } catch (e) {
-    return NextResponse.json({ error: 'invalid json' }, { status: 400 });
+  } catch (error: unknown) {
+    const message = errorMessage(error, 'invalid json');
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

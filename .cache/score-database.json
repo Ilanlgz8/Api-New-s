@@ -1,0 +1,277 @@
+[
+  [
+    "CL:Puskás Aréna in Budapest will host the final Qualifying:8 July:27 August 2025Competition proper:16 September 2025:2001-07-07",
+    {
+      "matchId": "CL:Puskás Aréna in Budapest will host the final Qualifying:8 July:27 August 2025Competition proper:16 September 2025:2001-07-07",
+      "homeTeam": "Puskás Aréna in Budapest will host the final Qualifying:8 July",
+      "awayTeam": "27 August 2025Competition proper:16 September 2025",
+      "competition": "CL",
+      "utcDate": "2001-07-07T00:00:00Z",
+      "scores": [
+        {
+          "home": 25,
+          "away": 30,
+          "source": "sofascore",
+          "confidence": 65,
+          "fetchedAt": 1779703204032
+        }
+      ],
+      "bestScore": {
+        "home": 25,
+        "away": 30,
+        "source": "sofascore",
+        "confidence": 65
+      }
+    }
+  ],
+  [
+    "CL:Matchday 3 21–22 October 2025::2025-10-21",
+    {
+      "matchId": "CL:Matchday 3 21–22 October 2025::2025-10-21",
+      "homeTeam": "Matchday 3 21–22 October 2025",
+      "awayTeam": "",
+      "competition": "CL",
+      "utcDate": "2025-10-21T00:00:00Z",
+      "scores": [
+        {
+          "home": 21,
+          "away": 22,
+          "source": "sofascore",
+          "confidence": 65,
+          "fetchedAt": 1779703204033
+        }
+      ],
+      "bestScore": {
+        "home": 21,
+        "away": 22,
+        "source": "sofascore",
+        "confidence": 65
+      }
+    }
+  ],
+  [
+    "CL:Matchday 4 4–5 November 2025::2025-11-04",
+    {
+      "matchId": "CL:Matchday 4 4–5 November 2025::2025-11-04",
+      "homeTeam": "Matchday 4 4–5 November 2025",
+      "awayTeam": "",
+      "competition": "CL",
+      "utcDate": "2025-11-04T00:00:00Z",
+      "scores": [
+        {
+          "home": 4,
+          "away": 5,
+          "source": "sofascore",
+          "confidence": 65,
+          "fetchedAt": 1779703204033
+        }
+      ],
+      "bestScore": {
+        "home": 4,
+        "away": 5,
+        "source": "sofascore",
+        "confidence": 65
+      }
+    }
+  ],
+  [
+    "CL:Matchday 5 25–26 November 2025::2025-11-25",
+    {
+      "matchId": "CL:Matchday 5 25–26 November 2025::2025-11-25",
+      "homeTeam": "Matchday 5 25–26 November 2025",
+      "awayTeam": "",
+      "competition": "CL",
+      "utcDate": "2025-11-25T00:00:00Z",
+      "scores": [
+        {
+          "home": 25,
+          "away": 26,
+          "source": "sofascore",
+          "confidence": 65,
+          "fetchedAt": 1779703204033
+        }
+      ],
+      "bestScore": {
+        "home": 25,
+        "away": 26,
+        "source": "sofascore",
+        "confidence": 65
+      }
+    }
+  ],
+  [
+    "CL:Matchday 6 9–10 December 2025::2025-12-09",
+    {
+      "matchId": "CL:Matchday 6 9–10 December 2025::2025-12-09",
+      "homeTeam": "Matchday 6 9–10 December 2025",
+      "awayTeam": "",
+      "competition": "CL",
+      "utcDate": "2025-12-09T00:00:00Z",
+      "scores": [
+        {
+          "home": 9,
+          "away": 10,
+          "source": "sofascore",
+          "confidence": 65,
+          "fetchedAt": 1779703204034
+        }
+      ],
+      "bestScore": {
+        "home": 9,
+        "away": 10,
+        "source": "sofascore",
+        "confidence": 65
+      }
+    }
+  ],
+  [
+    "CL:Matchday 7 20–21 January 2026::2026-01-20",
+    {
+      "matchId": "CL:Matchday 7 20–21 January 2026::2026-01-20",
+      "homeTeam": "Matchday 7 20–21 January 2026",
+      "awayTeam": "",
+      "competition": "CL",
+      "utcDate": "2026-01-20T00:00:00Z",
+      "scores": [
+        {
+          "home": 20,
+          "away": 21,
+          "source": "sofascore",
+          "confidence": 65,
+          "fetchedAt": 1779703204034
+        }
+      ],
+      "bestScore": {
+        "home": 20,
+        "away": 21,
+        "source": "sofascore",
+        "confidence": 65
+      }
+    }
+  ],
+  [
+    "CL:Semi-finals 28–29 April 2026::2026-04-28",
+    {
+      "matchId": "CL:Semi-finals 28–29 April 2026::2026-04-28",
+      "homeTeam": "Semi-finals 28–29 April 2026",
+      "awayTeam": "",
+      "competition": "CL",
+      "utcDate": "2026-04-28T00:00:00Z",
+      "scores": [
+        {
+          "home": 28,
+          "away": 29,
+          "source": "sofascore",
+          "confidence": 65,
+          "fetchedAt": 1779703204034
+        }
+      ],
+      "bestScore": {
+        "home": 28,
+        "away": 29,
+        "source": "sofascore",
+        "confidence": 65
+      }
+    }
+  ],
+  [
+    "UEL:Beşiktaş Stadium in Istanbul will host the final Qualifying:10 July:28 August 2025Competition proper:24 September 2025:2001-07-09",
+    {
+      "matchId": "UEL:Beşiktaş Stadium in Istanbul will host the final Qualifying:10 July:28 August 2025Competition proper:24 September 2025:2001-07-09",
+      "homeTeam": "Beşiktaş Stadium in Istanbul will host the final Qualifying:10 July",
+      "awayTeam": "28 August 2025Competition proper:24 September 2025",
+      "competition": "UEL",
+      "utcDate": "2001-07-09T00:00:00Z",
+      "scores": [
+        {
+          "home": 25,
+          "away": 20,
+          "source": "wikipedia",
+          "confidence": 85,
+          "fetchedAt": 1779200808318
+        }
+      ],
+      "bestScore": {
+        "home": 25,
+        "away": 20,
+        "source": "wikipedia",
+        "confidence": 85
+      }
+    }
+  ],
+  [
+    "UEL:&#8592; 2024–25 2026–27 &#8594; All statistics correct as of 7 May 2026. Rank Association Coeff. Teams Notes 1 &#160;England::2026-05-06",
+    {
+      "matchId": "UEL:&#8592; 2024–25 2026–27 &#8594; All statistics correct as of 7 May 2026. Rank Association Coeff. Teams Notes 1 &#160;England::2026-05-06",
+      "homeTeam": "&#8592; 2024–25 2026–27 &#8594; All statistics correct as of 7 May 2026. Rank Association Coeff. Teams Notes 1 &#160;England",
+      "awayTeam": "",
+      "competition": "UEL",
+      "utcDate": "2026-05-06T00:00:00Z",
+      "scores": [
+        {
+          "home": 24,
+          "away": 25,
+          "source": "wikipedia",
+          "confidence": 85,
+          "fetchedAt": 1779200808319
+        }
+      ],
+      "bestScore": {
+        "home": 24,
+        "away": 25,
+        "source": "wikipedia",
+        "confidence": 85
+      }
+    }
+  ],
+  [
+    "UECL:The Red Bull Arena in Leipzig will host the final Qualifying:8 July:28 August 2025Competition proper:2 October 2025:2001-07-07",
+    {
+      "matchId": "UECL:The Red Bull Arena in Leipzig will host the final Qualifying:8 July:28 August 2025Competition proper:2 October 2025:2001-07-07",
+      "homeTeam": "The Red Bull Arena in Leipzig will host the final Qualifying:8 July",
+      "awayTeam": "28 August 2025Competition proper:2 October 2025",
+      "competition": "UECL",
+      "utcDate": "2001-07-07T00:00:00Z",
+      "scores": [
+        {
+          "home": 25,
+          "away": 27,
+          "source": "wikipedia",
+          "confidence": 85,
+          "fetchedAt": 1779200808319
+        }
+      ],
+      "bestScore": {
+        "home": 25,
+        "away": 27,
+        "source": "wikipedia",
+        "confidence": 85
+      }
+    }
+  ],
+  [
+    "UECL:&#8592; 2024–25 2026–27 &#8594; All statistics correct as of 7 May 2026. Rank Association Coeff. Teams Notes 1 &#160;England::2026-05-06",
+    {
+      "matchId": "UECL:&#8592; 2024–25 2026–27 &#8594; All statistics correct as of 7 May 2026. Rank Association Coeff. Teams Notes 1 &#160;England::2026-05-06",
+      "homeTeam": "&#8592; 2024–25 2026–27 &#8594; All statistics correct as of 7 May 2026. Rank Association Coeff. Teams Notes 1 &#160;England",
+      "awayTeam": "",
+      "competition": "UECL",
+      "utcDate": "2026-05-06T00:00:00Z",
+      "scores": [
+        {
+          "home": 24,
+          "away": 25,
+          "source": "wikipedia",
+          "confidence": 85,
+          "fetchedAt": 1779200808320
+        }
+      ],
+      "bestScore": {
+        "home": 24,
+        "away": 25,
+        "source": "wikipedia",
+        "confidence": 85
+      }
+    }
+  ]
+]

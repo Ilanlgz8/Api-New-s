@@ -7,6 +7,7 @@ import { clsx } from 'clsx';
 import { useCrypto } from '@/hooks/useCrypto';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { WidgetSkeleton, ErrorCard } from '@/components/ui/Skeleton';
+import type { CryptoCoin } from '@/lib/cryptoTypes';
 
 export const CryptoWidget = React.memo(function CryptoWidget() {
   const { data, error, isLoading } = useCrypto();
@@ -18,7 +19,7 @@ export const CryptoWidget = React.memo(function CryptoWidget() {
     <Card accent="gold">
       <CardHeader title="Crypto" icon={<span className="text-accent-gold">₿</span>} />
       <div className="space-y-2">
-        {data?.map((coin: any) => (
+        {data?.map((coin: CryptoCoin) => (
           <CoinRow key={coin.id} coin={coin} />
         ))}
       </div>
@@ -26,7 +27,7 @@ export const CryptoWidget = React.memo(function CryptoWidget() {
   );
 });
 
-const CoinRow = React.memo(function CoinRow({ coin }: { coin: any }) {
+const CoinRow = React.memo(function CoinRow({ coin }: { coin: CryptoCoin }) {
   const change = coin.price_change_percentage_24h;
   const isUp = change >= 0;
   const sparkData = coin.sparkline_in_7d?.price?.map((p: number, i: number) => ({ v: p, i })) ?? [];

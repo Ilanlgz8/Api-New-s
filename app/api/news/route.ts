@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withCache, CACHE_TTL } from '@/lib/cache';
+import { errorMessage } from '@/lib/apiRouteError';
+import type { NewsArticle, NewsApiResponse, NewsCountry } from '@/lib/newsTypes';
 
 export const runtime = 'nodejs';
 
@@ -15,7 +17,7 @@ const RSS_SOURCES: Record<string, { url: string; name: string }[]> = {
   ],
 };
 
-async function fetchRss(url: string, sourceName: string) {
+async function fetchRss(url: string, sourceName: string): Promise<NewsArticle[]> {
   const res = await fetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Dashboard/1.0)' },
   }).catch(() => null);
@@ -47,10 +49,10 @@ async function fetchRss(url: string, sourceName: string) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const country = searchParams.get('country') ?? 'fr';
+  const country = (searchParams.get('country') ?? 'fr') as NewsCountry;
 
   try {
-    const { data, fromCache, age } = await withCache(`news:${country}`, CACHE_TTL.news, async () => {
+    const { data, fromCache, age } = await withCache<NewsApiResponse>(`news:${country}`, CACHE_TTL.news, async () => {
       // Si clé NewsAPI dispo on l'utilise en priorité
       if (process.env.NEWS_API_KEY) {
         const res = await fetch(
@@ -66,7 +68,7 @@ export async function GET(request: Request) {
       );
 
       const articles = allArticles.flat()
-        .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+        .sort((a, b) => new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime())
         .slice(0, 12);
 
       console.log(`📰 News RSS: ${articles.length} articles (${country})`);
@@ -76,8 +78,8 @@ export async function GET(request: Request) {
     return NextResponse.json(data, {
       headers: { 'X-Cache': fromCache ? `HIT age=${age}s` : 'MISS' },
     });
-  } catch (error: any) {
-    console.error('News error FULL:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    console.error('News error:', errorMessage(error));
+    return NextResponse.json({ error: errorMessage(error) }, { status: 500 });
   }
 }

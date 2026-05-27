@@ -1,19 +1,14 @@
 import { NextResponse } from 'next/server';
 import { withCache } from '@/lib/cache';
+import { buildProbableLineup, classifyRow, getOutcome, normalizeLineupBlock, normalizeName } from '@/lib/footballMatchHelpers';
+import { AF_LEAGUE_BY_CODE } from '@/lib/footballConstants';
 
 export const runtime = 'nodejs';
 
 const FD_BASE = 'https://api.football-data.org/v4';
 const AF_BASE = 'https://api-football-v1.p.rapidapi.com/v3';
 
-const AF_LEAGUE_BY_CODE: Record<string, number> = {
-  FL1: 61,
-  PL: 39,
-  PD: 140,
-  SA: 135,
-  BL1: 78,
-  CL: 2,
-};
+// AF_LEAGUE_BY_CODE imported from lib/footballConstants
 
 function fdHeaders() {
   return { 'X-Auth-Token': process.env.FOOTBALL_API_KEY ?? '' };
@@ -27,30 +22,11 @@ function afHeaders() {
   };
 }
 
-function normalizeName(value = '') {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\b(fc|cf|sc|afc|as|ac|de|the|club|sporting)\b/g, '')
-    .replace(/[^a-z0-9]/g, '');
-}
-
 function seasonFromDate(isoDate: string) {
   const d = new Date(isoDate);
   const y = d.getUTCFullYear();
   const m = d.getUTCMonth() + 1;
   return m >= 7 ? y : y - 1;
-}
-
-function getOutcome(match: any, teamId: number) {
-  const home = match.score?.fullTime?.home;
-  const away = match.score?.fullTime?.away;
-  if (home == null || away == null) return 'D';
-  const isHome = match.homeTeam?.id === teamId;
-  if (home === away) return 'D';
-  if (isHome) return home > away ? 'W' : 'L';
-  return away > home ? 'W' : 'L';
 }
 
 async function fetchTeamRecentMatches(teamId: number, limit = 10) {
@@ -66,62 +42,6 @@ async function fetchTeamRecentMatches(teamId: number, limit = 10) {
   return data;
 }
 
-function normalizeLineupPlayer(playerEntry: any) {
-  const player = playerEntry?.player ?? playerEntry ?? {};
-  return {
-    id: player.id ?? playerEntry?.id ?? null,
-    name: player.name ?? playerEntry?.name ?? 'Joueur',
-    shirtNumber: player.number ?? playerEntry?.number ?? playerEntry?.shirtNumber ?? '-',
-    position: player.pos ?? playerEntry?.position ?? playerEntry?.role ?? 'N/A',
-    grid: player.grid ?? playerEntry?.grid ?? null,
-    captain: player.captain ?? playerEntry?.captain ?? false,
-  };
-}
-
-function normalizeLineupBlock(teamBlock: any, fallbackName: string) {
-  if (!teamBlock) {
-    return {
-      formation: null,
-      starters: [],
-      bench: [],
-      teamName: fallbackName,
-      official: false,
-    };
-  }
-
-  const starters = (teamBlock.startXI ?? teamBlock.lineup ?? teamBlock.startingXI ?? teamBlock.starting11 ?? []).map(normalizeLineupPlayer);
-  const bench = (teamBlock.substitutes ?? teamBlock.bench ?? []).map(normalizeLineupPlayer);
-
-  return {
-    formation: teamBlock.formation ?? null,
-    starters,
-    bench,
-    teamName: teamBlock.team?.name ?? fallbackName,
-    official: Array.isArray(starters) && starters.length > 0,
-  };
-}
-
-function classifyRow(row: any) {
-  const pos = Number(row.position);
-  if (pos <= 4) return 'champions';
-  if (pos <= 6) return 'europa';
-  if (pos <= 7) return 'conference';
-  if (pos >= 18) return 'relegation';
-  if (pos >= 16) return 'playoff';
-  return 'none';
-}
-
-function countByKey<T>(items: T[], keyFn: (item: T) => string) {
-  const map = new Map<string, { count: number; item: T }>();
-  for (const item of items) {
-    const key = keyFn(item);
-    if (!key) continue;
-    const entry = map.get(key);
-    if (entry) entry.count += 1;
-    else map.set(key, { count: 1, item });
-  }
-  return map;
-}
 
 async function fetchApiFootballRecentLineups(teamId: number, league: number, season: number) {
   const apiKey = process.env.RAPIDAPI_KEY ?? process.env.API_FOOTBALL_KEY;
@@ -148,45 +68,6 @@ async function fetchApiFootballRecentLineups(teamId: number, league: number, sea
 
     return lineups.flat().filter(Boolean);
   }).then((r) => r.data);
-}
-
-function buildProbableLineup(teamName: string, recentLineups: any[]) {
-  const starterPool = recentLineups.flatMap((fixture: any) => {
-    const teamBlock = (fixture ?? []).find((lineup: any) => normalizeName(lineup.team?.name ?? '').includes(normalizeName(teamName)) || normalizeName(teamName).includes(normalizeName(lineup.team?.name ?? '')));
-    const starters = (teamBlock?.startXI ?? teamBlock?.lineup ?? []).map(normalizeLineupPlayer);
-    return starters;
-  });
-
-  if (!starterPool.length) {
-    return {
-      formation: null,
-      starters: [],
-      bench: [],
-      teamName,
-      official: false,
-    };
-  }
-
-  const playerCounts = countByKey(starterPool, (p: any) => `${normalizeName(p.name)}:${p.shirtNumber ?? ''}`);
-  const formationCounts = countByKey(recentLineups.flatMap((fixture: any) => {
-    const teamBlock = (fixture ?? []).find((lineup: any) => normalizeName(lineup.team?.name ?? '').includes(normalizeName(teamName)) || normalizeName(teamName).includes(normalizeName(lineup.team?.name ?? '')));
-    return teamBlock?.formation ? [String(teamBlock.formation)] : [];
-  }), (v) => v);
-
-  const starters = Array.from(playerCounts.values())
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 11)
-    .map(({ item }) => item);
-
-  const probableFormation = Array.from(formationCounts.values()).sort((a, b) => b.count - a.count)[0]?.item ?? null;
-
-  return {
-    formation: probableFormation,
-    starters,
-    bench: [],
-    teamName,
-    official: false,
-  };
 }
 
 async function fetchAllSportsBundle(fdMatch: any) {
@@ -439,8 +320,9 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json(data);
-  } catch (error: any) {
-    console.error('Match stats error:', error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Erreur match inconnue';
+    console.error('Match stats error:', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

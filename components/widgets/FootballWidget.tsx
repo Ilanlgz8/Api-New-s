@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 import {
   Activity,
@@ -8,6 +8,8 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleDot,
+  ArrowDownRight,
+  ArrowUpRight,
   Radio,
   Shield,
   Sparkles,
@@ -18,8 +20,26 @@ import { useFootball } from '@/hooks/useFootball';
 import { Card } from '@/components/ui/Card';
 import { WidgetSkeleton, ErrorCard } from '@/components/ui/Skeleton';
 import { MatchPanel } from '@/components/widgets/MatchPanel';
+import type { FootballEvent, FootballTab } from '@/lib/footballTypes';
+import {
+  canonicalTeamName,
+  competitionDisplayLabelOf,
+  competitionKeyOf,
+  competitionLabelOf,
+  competitionMetaFromMatches,
+  competitionMetaOf,
+  dedupeMatches,
+  groupByComp,
+  ALLOWED_COMPETITION_KEYWORDS,
+  isAllowedCompetition,
+  isWorldCupLabel,
+  normalizeName,
+  normalizeTeamNameForDedup,
+  sortedGroups,
+  teamRating,
+  translateCompetitionLabel,
+} from '@/lib/footballHelpers';
 
-type Tab = 'live' | 'today' | 'results';
 const MATCHES_PER_PAGE = 4;
 
 type Odds = {
@@ -31,146 +51,23 @@ type Odds = {
   lastUpdate?: string | null;
 };
 
-const COMP_ORDER = ['Champions League', 'Ligue 1', 'Premier League', 'La Liga', 'Serie A', 'Bundesliga'];
-
-const ALLOWED_COMPETITION_KEYWORDS = [
-  'ligue 1',
-  'la liga',
-  'laliga',
-  'premier league',
-  'premiere ligue',
-  'serie a',
-  'bundesliga',
-  'liga portugal',
-  'primeira liga',
-  'champions league',
-  'ligue des champions',
-  'europa league',
-  'conference league',
-  'cdm',
-  'world cup',
-].map((value) => normalizeName(value));
-
-const TAB_CONFIG: Record<Tab, { label: string; eyebrow: string; icon: React.ElementType }> = {
+const TAB_CONFIG: Record<FootballTab, { label: string; eyebrow: string; icon: React.ElementType }> = {
   live: { label: 'Live', eyebrow: 'En direct', icon: Radio },
   today: { label: 'Matchs', eyebrow: 'A venir', icon: CalendarDays },
   results: { label: 'Scores', eyebrow: 'Termines', icon: Trophy },
 };
 
-const TEAM_RATINGS: Array<[string, number]> = [
-  ['realmadrid', 97], ['barca', 95], ['barcelona', 95], ['mancity', 96], ['manchestercity', 96],
-  ['arsenal', 92], ['liverpool', 93], ['chelsea', 86], ['manunited', 84], ['manchesterunited', 84],
-  ['psg', 94], ['parissaintgermain', 94], ['monaco', 82], ['marseille', 82], ['lille', 80], ['lyon', 78],
-  ['bayern', 95], ['dortmund', 86], ['leverkusen', 89], ['leipzig', 85], ['stuttgart', 78],
-  ['inter', 92], ['milan', 87], ['juventus', 86], ['napoli', 87], ['roma', 82], ['lazio', 79], ['atalanta', 84],
-  ['atleti', 88], ['atleticomadrid', 88], ['villareal', 80], ['villarreal', 80], ['sevilla', 77],
-  ['newcastle', 84], ['astonvilla', 82], ['tottenham', 84], ['brighton', 79], ['westham', 77],
-];
-
-const KNOWN_TEAM_ABBR: Record<string, string> = {
-  manchestercity: 'Manchester City',
-  manchesterunited: 'Manchester United',
-  parissaintgermain: 'Paris Saint-Germain',
-  atleticomadrid: 'Atletico Madrid',
-  bayernmunich: 'Bayern Munich',
-  fcbayernmunich: 'Bayern Munich',
-  fcbayern: 'Bayern Munich',
-  bayer04leverkusen: 'Bayer Leverkusen',
-  olympiquedemarseille: 'Olympique Marseille',
-  olympiquelyonnais: 'Olympique Lyonnais',
-  borussiadortmund: 'Borussia Dortmund',
-  bvb: 'Borussia Dortmund',
-  tottenhamhotspur: 'Tottenham Hotspur',
-  astonvilla: 'Aston Villa',
-};
-
-// Mapping d'aliases vers les noms complets utilisés dans l'interface.
-const TEAM_NAME_ALIASES: Record<string, string> = {
-  bl: 'Bayer Leverkusen',
-  b04: 'Bayer Leverkusen',
-  bayer04: 'Bayer Leverkusen',
-  bayer04leverkusen: 'Bayer Leverkusen',
-  bayerleverkusen: 'Bayer Leverkusen',
-  leverkusen: 'Bayer Leverkusen',
-  'bayer 04': 'Bayer Leverkusen',
-  'bayer 04 leverkusen': 'Bayer Leverkusen',
-  hambug: 'Hamburger SV',
-  hamburg: 'Hamburger SV',
-  hsv: 'Hamburger SV',
-  hamburgersv: 'Hamburger SV',
-  mancity: 'Manchester City',
-  'man city': 'Manchester City',
-  manunited: 'Manchester United',
-  manutd: 'Manchester United',
-  'man utd': 'Manchester United',
-  'man united': 'Manchester United',
-  psg: 'Paris Saint-Germain',
-  om: 'Olympique Marseille',
-  ol: 'Olympique Lyonnais',
-  bvb: 'Borussia Dortmund',
-  dortmund: 'Borussia Dortmund',
-  fcb: 'FC Barcelona',
-  barca: 'FC Barcelona',
-  realmadrid: 'Real Madrid',
-  'real madrid': 'Real Madrid',
-  atleti: 'Atletico Madrid',
-  atm: 'Atletico Madrid',
-  atalanta: 'Atalanta Bergamo',
-};
-
-function normalizeName(value = '') {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\b(fc|cf|sc|afc|as|ac|calcio|club|de|the)\b/g, '')
-    .replace(/[^a-z0-9]/g, '');
-}
-
-function normalizeTeamNameForDedup(teamName = '') {
-  const lowercased = teamName.toLowerCase().trim();
-  // Tenta expandir alias conhecidos
-  const expanded = TEAM_NAME_ALIASES[lowercased] || teamName;
-  // Aplica normalizacao
-  return normalizeName(expanded);
-}
-
-function canonicalTeamName(team: any) {
-  const candidates = [team?.name, team?.shortName, team?.tla].filter(Boolean).map((value) => String(value).trim());
-
-  for (const candidate of candidates) {
-    const aliasKey = candidate.toLowerCase();
-    const normalizedKey = normalizeName(candidate);
-    if (TEAM_NAME_ALIASES[aliasKey]) return TEAM_NAME_ALIASES[aliasKey];
-    if (TEAM_NAME_ALIASES[normalizedKey]) return TEAM_NAME_ALIASES[normalizedKey];
-    if (KNOWN_TEAM_ABBR[normalizedKey]) return KNOWN_TEAM_ABBR[normalizedKey];
-  }
-
-  return candidates[0] ?? 'Equipe';
-}
-
-function seededNoise(value = '') {
-  let hash = 0;
-  for (let i = 0; i < value.length; i += 1) hash = (hash * 31 + value.charCodeAt(i)) % 997;
-  return (hash % 17) - 8;
-}
-
-function teamRating(team: any) {
-  const name = normalizeName(`${team?.name ?? ''}${team?.shortName ?? ''}${team?.tla ?? ''}`);
-  const direct = TEAM_RATINGS.find(([key]) => name.includes(key) || key.includes(name));
-  return (direct?.[1] ?? 68) + seededNoise(name);
-}
-
-function getBookOdds(match: any): Odds {
+function getBookOdds(match: FootballEvent): Odds {
   const prices = match.publicOdds?.prices;
   if (prices?.home && prices?.draw && prices?.away) {
+    const publicOdds = match.publicOdds;
     return {
       win: Number(prices.home),
       draw: Number(prices.draw),
       loss: Number(prices.away),
       source: 'public',
-      bookmaker: match.publicOdds.bookmaker,
-      lastUpdate: match.publicOdds.lastUpdate,
+      bookmaker: publicOdds?.bookmaker,
+      lastUpdate: publicOdds?.lastUpdate,
     };
   }
 
@@ -191,120 +88,277 @@ function getBookOdds(match: any): Odds {
   };
 }
 
+function oddsToProbabilities(odds: Odds) {
+  const home = odds.win > 0 ? 1 / odds.win : 0;
+  const draw = odds.draw > 0 ? 1 / odds.draw : 0;
+  const away = odds.loss > 0 ? 1 / odds.loss : 0;
+  const total = home + draw + away || 1;
 
-function clampOdd(value: number) {
-  return Number(Math.max(1.12, Math.min(18, value)).toFixed(2));
+  return {
+    home: home / total,
+    draw: draw / total,
+    away: away / total,
+  };
 }
 
-function groupByComp(matches: any[]) {
-  return matches.reduce((acc: Record<string, any[]>, m: any) => {
-    const key = competitionKeyOf(m);
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(m);
-    return acc;
-  }, {});
+// Module-level cache to smooth odds and detect recent score changes
+type OddsCacheEntry = {
+  probs: { home: number; draw: number; away: number };
+  oddsDecimal: { win: number; draw: number; loss: number };
+  lastScoreHome: number;
+  lastScoreAway: number;
+  lastChangeAt: number; // ms
+  lastComputedAt: number; // ms
+};
+
+const oddsStateCache = new Map<string, OddsCacheEntry>();
+
+function blend(a: number, b: number, alpha: number) {
+  return a * (1 - alpha) + b * alpha;
 }
 
-function competitionKeyOf(match: any) {
+function makeCacheKey(match: FootballEvent) {
   return (
-    match?.competition?.code ??
-    match?.competitionName ??
-    match?.leagueName ??
-    match?.competition?.name ??
-    'Autres'
+    match.id || match.matchId || match.fixture?.id || `${match.utcDate}:${canonicalTeamName(match.homeTeam)}:${canonicalTeamName(match.awayTeam)}`
   );
 }
 
-function competitionLabelOf(match: any) {
-  return match?.leagueName ?? match?.competitionName ?? match?.competition?.name ?? match?.competition?.code ?? 'Autres';
-}
+function parseMinuteValue(value: string | number | null | undefined) {
+  if (value == null) return null;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
 
-function competitionDisplayLabelOf(match: any) {
-  return translateCompetitionLabel(competitionLabelOf(match));
-}
-
-const COMP_LABEL_FR: Record<string, string> = {
-  ligue1: 'Ligue 1',
-  laliga: 'LaLiga',
-  'la liga': 'LaLiga',
-  premierleague: 'Première ligue',
-  premiereligue: 'Première ligue',
-  seriea: 'Serie A',
-  bundesliga: 'Bundesliga',
-  ligaportugal: 'Liga Portugal',
-  primeiraliga: 'Liga Portugal',
-  championsleague: 'Ligue des champions',
-  liguedeschampions: 'Ligue des champions',
-  europaleague: 'Europa League',
-  'europa league': 'Europa League',
-  conferenceleague: 'Conference League',
-  'uefaeuropaconferenceleague': 'Conference League',
-  worldcup: 'Coupe du Monde',
-  cdm: 'Coupe du Monde',
-};
-
-function translateCompetitionLabel(name?: string) {
-  if (!name) return name ?? 'Autres';
-  const k = normalizeName(name);
-  // direct match
-  if (COMP_LABEL_FR[k]) return COMP_LABEL_FR[k];
-  // fuzzy match: check if any known key is substring of the normalized name (handles variants like 'englishpremierleague')
-  for (const [key, val] of Object.entries(COMP_LABEL_FR)) {
-    if (k.includes(key) || key.includes(k)) return val;
+  const raw = String(value).trim();
+  const addedTime = raw.match(/^(\d+)\+(\d+)$/);
+  if (addedTime) {
+    return Number(addedTime[1]) + Number(addedTime[2]);
   }
-  return name;
+
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
-function isAllowedCompetition(match: any) {
-  const key = normalizeName(competitionKeyOf(match));
-  const label = normalizeName(competitionLabelOf(match));
-  return ALLOWED_COMPETITION_KEYWORDS.some((allowed) => key.includes(allowed) || label.includes(allowed) || allowed.includes(key) || allowed.includes(label));
+function resolveLiveMinuteNumber(match: FootballEvent, nowTick?: number) {
+  const sourceMinute = parseMinuteValue(match.liveDetails?.minute ?? match.minute);
+  if (sourceMinute != null) return sourceMinute;
+
+  if (nowTick == null) return null;
+
+  return parseMinuteValue(calculateLiveMinute(match, nowTick));
 }
 
-function dedupeMatches(matches: any[]) {
-  const seen = new Set<string>();
-  return matches.filter((match) => {
-    const key = [
-      normalizeName(competitionKeyOf(match)),
-      normalizeTeamNameForDedup(canonicalTeamName(match?.homeTeam)),
-      normalizeTeamNameForDedup(canonicalTeamName(match?.awayTeam)),
-      String(match?.utcDate ?? match?.fixture?.date ?? match?.date ?? ''),
-    ].join(':');
-
-    if (seen.has(String(key))) return false;
-    seen.add(String(key));
-    return true;
-  });
+function parseStatNumber(value: any): number | null {
+  if (value == null) return null;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  const raw = String(value).trim();
+  if (!raw) return null;
+  const cleaned = raw.replace('%', '').replace(',', '.').replace(/[^0-9.\-]/g, '');
+  const parsed = Number(cleaned);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
-function sortedGroups(grouped: Record<string, any[]>) {
-  return Object.entries(grouped).sort(([a], [b]) => {
-    const ai = COMP_ORDER.indexOf(a);
-    const bi = COMP_ORDER.indexOf(b);
-    if (ai === -1 && bi === -1) return a.localeCompare(b);
-    if (ai === -1) return 1;
-    if (bi === -1) return -1;
-    return ai - bi;
-  });
+function statFromTeamBlock(team: any, labels: string[]) {
+  const stats = team?.statistics;
+  if (!Array.isArray(stats)) return null;
+
+  for (const label of labels) {
+    const entry = stats.find((s: any) => String(s?.type ?? '').toLowerCase() === label.toLowerCase());
+    const value = parseStatNumber(entry?.value);
+    if (value != null) return value;
+  }
+
+  return null;
 }
 
-function competitionMetaFromMatches(matches: any[]) {
-  const firstMatch = matches[0];
+function extractLiveStatVector(match: FootballEvent) {
+  const candidates = [
+    match?.stats,
+    match?.liveDetails?.stats,
+    match?.statistics,
+  ];
+
+  const statsArray = candidates.find((candidate) => Array.isArray(candidate) && candidate.length >= 2);
+  if (!statsArray) return null;
+
+  const home = statsArray[0];
+  const away = statsArray[1];
+
+  const homeXg = statFromTeamBlock(home, ['Expected Goals', 'xG', 'Expected Goals (xG)']);
+  const awayXg = statFromTeamBlock(away, ['Expected Goals', 'xG', 'Expected Goals (xG)']);
+  const homeShots = statFromTeamBlock(home, ['Total Shots', 'Shots']);
+  const awayShots = statFromTeamBlock(away, ['Total Shots', 'Shots']);
+  const homeShotsOn = statFromTeamBlock(home, ['Shots on Goal', 'Shots on Target']);
+  const awayShotsOn = statFromTeamBlock(away, ['Shots on Goal', 'Shots on Target']);
+  const homePoss = statFromTeamBlock(home, ['Ball Possession', 'Possession']);
+  const awayPoss = statFromTeamBlock(away, ['Ball Possession', 'Possession']);
+
+  const hasSignal = [homeXg, awayXg, homeShots, awayShots, homeShotsOn, awayShotsOn, homePoss, awayPoss].some((value) => value != null);
+  if (!hasSignal) return null;
+
   return {
-    name: translateCompetitionLabel(firstMatch ? competitionLabelOf(firstMatch) : 'Autres'),
-    emblem: firstMatch ? getEmblem(firstMatch) : null,
+    homeXg,
+    awayXg,
+    homeShots,
+    awayShots,
+    homeShotsOn,
+    awayShotsOn,
+    homePoss,
+    awayPoss,
   };
 }
 
-function competitionMetaOf(match: any) {
+function getLiveOdds(match: FootballEvent, odds: Odds, nowTick?: number): Odds {
+  const isLive = match.status === 'IN_PLAY' || match.status === 'LIVE' || match.status === 'PAUSED';
+  if (!isLive) return odds;
+
+  const minute = resolveLiveMinuteNumber(match, nowTick);
+  if (minute == null) return odds;
+
+  const scoreHome = Number(scoreOf(match, 'home') ?? 0);
+  const scoreAway = Number(scoreOf(match, 'away') ?? 0);
+  const goalDiff = scoreHome - scoreAway;
+  const gap = Math.abs(goalDiff);
+  const effectiveMinute = Math.max(0, Math.min(120, minute));
+  const urgency = Math.max(0, Math.min(1, effectiveMinute / 90));
+  const base = oddsToProbabilities(odds);
+
+  const liveStats = extractLiveStatVector(match);
+  const statEdgeHome = (() => {
+    if (!liveStats) return 0;
+    const xgDelta = (liveStats.homeXg ?? 0) - (liveStats.awayXg ?? 0);
+    const shotsOnDelta = (liveStats.homeShotsOn ?? 0) - (liveStats.awayShotsOn ?? 0);
+    const shotsDelta = (liveStats.homeShots ?? 0) - (liveStats.awayShots ?? 0);
+    const possDelta = ((liveStats.homePoss ?? 50) - (liveStats.awayPoss ?? 50)) / 100;
+
+    // Weighted stat edge: xG first, then shots on target, then shots and possession.
+    const edge = xgDelta * 0.24 + shotsOnDelta * 0.04 + shotsDelta * 0.012 + possDelta * 0.16;
+    return Math.max(-0.3, Math.min(0.3, edge));
+  })();
+
+  // Build a compact state-based probability estimate (draw + side shares)
+  const neutralDraw = base.draw;
+  const drawDecay = goalDiff === 0 ? 1 - urgency * 0.22 : Math.max(0.6, 1 - urgency * 0.36 - gap * 0.04);
+  let stateDrawRaw = neutralDraw * drawDecay + (goalDiff === 0 ? 0.06 * (1 - Math.abs(base.home - base.away)) : -0.04 * gap);
+
+  // Stats can reduce draw likelihood when one team clearly dominates chance creation,
+  // even if the score is still level.
+  if (liveStats) {
+    const statImbalance = Math.abs(statEdgeHome);
+    if (goalDiff === 0) {
+      stateDrawRaw -= Math.min(0.08, statImbalance * 0.22);
+    } else {
+      stateDrawRaw -= Math.min(0.04, statImbalance * 0.1);
+    }
+  }
+  stateDrawRaw = Math.max(0.08, Math.min(0.42, stateDrawRaw));
+
+  // side strength (leader/trailer) derived from base split + goal gap + time pressure
+  const sideBaseTotal = Math.max(1e-6, base.home + base.away);
+  const homeShareBase = base.home / sideBaseTotal;
+  const awayShareBase = base.away / sideBaseTotal;
+  const gapEffect = Math.min(0.28, 0.06 + gap * 0.06 + urgency * 0.2);
+
+  let leaderProb = 0.5;
+  if (goalDiff === 0) {
+    const bias = Math.max(-0.06, Math.min(0.06, (homeShareBase - awayShareBase) * 0.25));
+    const statsBias = statEdgeHome * 0.33;
+    leaderProb = 0.5 + bias + statsBias;
+  } else {
+    const leadBase = goalDiff > 0 ? homeShareBase : awayShareBase;
+    const leaderStatsEdge = goalDiff > 0 ? statEdgeHome : -statEdgeHome;
+    leaderProb = Math.max(0.06, Math.min(0.92, leadBase + gapEffect + leaderStatsEdge * 0.22));
+  }
+
+  // allocate remaining mass after draw
+  const remainingMass = Math.max(0.18, 1 - stateDrawRaw);
+  const leaderShare = leaderProb;
+  const trailerShare = 1 - leaderShare;
+
+  let protoHome = goalDiff >= 0 ? remainingMass * leaderShare : remainingMass * trailerShare;
+  let protoAway = goalDiff <= 0 ? remainingMass * leaderShare : remainingMass * trailerShare;
+
+  // normalize and apply small floor
+  const floor = 0.02;
+  protoHome = Math.max(floor, protoHome);
+  protoAway = Math.max(floor, protoAway);
+  let ren = protoHome + stateDrawRaw + protoAway;
+  protoHome /= ren;
+  const protoDraw = stateDrawRaw / ren;
+  protoAway /= ren;
+
+  const newProbs = { home: protoHome, draw: protoDraw, away: protoAway };
+
+  // Convert to decimal odds with a small bookmaker margin (overround)
+  const liveTension = Math.max(0, Math.min(1, gap * 0.08 + urgency * 0.34));
+  const baseMargin = 1.03; // healthy bookmaker margin
+  const margin = baseMargin + liveTension * 0.02; // slightly wider when tense
+
+  const rawNewOdds = {
+    win: clampOdd(margin / Math.max(1e-6, newProbs.home), 1.01, 40),
+    draw: clampOdd(margin / Math.max(1e-6, newProbs.draw), 1.01, 40),
+    loss: clampOdd(margin / Math.max(1e-6, newProbs.away), 1.01, 40),
+  };
+
+  // Smoothing: compare with cached previous odds to avoid large jumps and detect recent goals
+  const key = makeCacheKey(match);
+  const now = Date.now();
+  const prev = oddsStateCache.get(String(key));
+
+  const prevOddsDecimal = prev ? prev.oddsDecimal : { win: odds.win, draw: odds.draw, loss: odds.loss };
+  const prevScoreHome = prev ? prev.lastScoreHome : scoreHome;
+  const prevScoreAway = prev ? prev.lastScoreAway : scoreAway;
+  const scoreChanged = prev && (prevScoreHome !== scoreHome || prevScoreAway !== scoreAway);
+  const lastChangeAt = scoreChanged ? now : prev?.lastChangeAt ?? now;
+
+  const timeSinceChangeSec = (now - (prev?.lastChangeAt ?? now)) / 1000;
+  const recentGoalFactor = scoreChanged ? 1 : Math.max(0, 1 - Math.min(1, timeSinceChangeSec / 90));
+
+  // alpha: how much to follow the new model immediately (more after a goal)
+  const alpha = Math.min(0.7, 0.12 + recentGoalFactor * 0.56);
+
+  // limit per-update relative swing to keep realistic. More allowed late and on recent goals.
+  const maxRel = 0.18 + urgency * 0.14 + recentGoalFactor * 0.22; // ~18% base
+
+  const clampRelative = (prevVal: number, candidate: number) => {
+    const min = prevVal * (1 - maxRel);
+    const max = prevVal * (1 + maxRel);
+    return Math.max(min, Math.min(max, candidate));
+  };
+
+  const limitedNew = {
+    win: clampRelative(prevOddsDecimal.win || rawNewOdds.win, rawNewOdds.win),
+    draw: clampRelative(prevOddsDecimal.draw || rawNewOdds.draw, rawNewOdds.draw),
+    loss: clampRelative(prevOddsDecimal.loss || rawNewOdds.loss, rawNewOdds.loss),
+  };
+
+  const finalOddsDecimal = {
+    win: Number(blend(prevOddsDecimal.win || limitedNew.win, limitedNew.win, alpha).toFixed(2)),
+    draw: Number(blend(prevOddsDecimal.draw || limitedNew.draw, limitedNew.draw, alpha).toFixed(2)),
+    loss: Number(blend(prevOddsDecimal.loss || limitedNew.loss, limitedNew.loss, alpha).toFixed(2)),
+  };
+
+  // update cache
+  oddsStateCache.set(String(key), {
+    probs: newProbs,
+    oddsDecimal: finalOddsDecimal,
+    lastScoreHome: scoreHome,
+    lastScoreAway: scoreAway,
+    lastChangeAt: scoreChanged ? now : prev?.lastChangeAt ?? now,
+    lastComputedAt: now,
+  });
+
   return {
-    name: translateCompetitionLabel(competitionLabelOf(match)),
-    emblem: getEmblem(match),
+    win: clampOdd(finalOddsDecimal.win, 1.05, 40),
+    draw: clampOdd(finalOddsDecimal.draw, 1.05, 40),
+    loss: clampOdd(finalOddsDecimal.loss, 1.05, 40),
+    source: odds.source,
+    bookmaker: odds.bookmaker,
+    lastUpdate: odds.lastUpdate,
   };
 }
 
-function getEmblem(match: any) {
-  return match.competition?.emblem ?? null;
+
+function clampOdd(value: number, min = 1.12, max = 18) {
+  return Number(Math.max(min, Math.min(max, value)).toFixed(2));
 }
 
 function formatTime(dateStr: string) {
@@ -350,7 +404,7 @@ function calculateLiveMinute(match: any, nowTick: number): string | null {
 
     // Après la mi-temps, on retire la coupure et on décale d'une minute pour
     // que la reprise s'affiche à 46' comme dans les broadcasts classiques.
-    const footballMinutes = elapsedMinutes - 14;
+    const footballMinutes = elapsedMinutes - 15;
 
     if (footballMinutes <= 90) {
       return `${footballMinutes}`;
@@ -372,7 +426,7 @@ function formatLiveMinute(match: any) {
   return `${m}`;
 }
 
-function statusLabel(match: any, nowTick?: number) {
+function statusLabel(match: FootballEvent, nowTick?: number) {
   if (match.status === 'PAUSED') return 'MT';
 
   // Si on a nowTick (client-side), calculer la minute depuis utcDate
@@ -387,27 +441,50 @@ function statusLabel(match: any, nowTick?: number) {
   const liveMinute = formatLiveMinute(match);
   if (match.status === 'IN_PLAY' || match.status === 'LIVE') return liveMinute ? `${liveMinute}'` : 'LIVE';
   if (match.status === 'FINISHED') return 'FIN';
-  return `${smartDate(match.utcDate)} ${formatTime(match.utcDate)}`;
+  const dateValue = match.utcDate ?? '';
+  return `${smartDate(dateValue)} ${formatTime(dateValue)}`;
 }
 
-function displayTeamName(team: any) {
+function displayTeamName(team: FootballEvent['homeTeam'] | FootballEvent['awayTeam']) {
   return canonicalTeamName(team);
 }
 
 export const FootballWidget = React.memo(function FootballWidget() {
-  const [tab, setTab] = useState<Tab>('today');
+  const [tab, setTab] = useState<FootballTab>('today');
   const [activeLeague, setActiveLeague] = useState('TOUT');
   const [page, setPage] = useState(0);
-  const [selectedMatch, setSelectedMatch] = useState<any>(null);
+  const [selectedMatch, setSelectedMatch] = useState<FootballEvent | null>(null);
   const { live, today, results, refetch } = useFootball();
   const [nowTick, setNowTick] = useState<number>(Date.now());
 
   const current = tab === 'live' ? live : tab === 'today' ? today : results;
   const rawItems = tab === 'live' ? current.data?.matches ?? [] : current.data?.events ?? [];
-  const visibleItems = useMemo(() => dedupeMatches(rawItems.filter(isAllowedCompetition)), [rawItems]);
+
+  // Filter out injected/test events by provenance or suspicious ids
+  function isTrustedEvent(event: FootballEvent) {
+    if (!event) return false;
+    if (event.provenance === 'injected') return false;
+    const id = String(event.id ?? '');
+    if (id.includes('fl1-test') || id.includes('test-match') || id.includes('injected')) return false;
+
+    const homeName = String(event?.homeTeam?.name ?? event?.homeTeam?.shortName ?? '').trim();
+    const awayName = String(event?.awayTeam?.name ?? event?.awayTeam?.shortName ?? '').trim();
+
+    // Drop malformed placeholders (e.g. "Final ... at Stadium") emitted by weak fallback parsing.
+    if (!homeName || !awayName) return false;
+    if (/^final\b/i.test(homeName) || /^final\b/i.test(awayName)) return false;
+
+    return true;
+  }
+
+  const visibleItems = useMemo(() => dedupeMatches(rawItems.filter(isAllowedCompetition).filter(isTrustedEvent)), [rawItems]);
   const liveCount = useMemo(() => dedupeMatches((live.data?.matches ?? []).filter(isAllowedCompetition)).length, [live.data?.matches]);
   const todayCount = useMemo(() => dedupeMatches((today.data?.events ?? []).filter(isAllowedCompetition)).length, [today.data?.events]);
   const resultsCount = useMemo(() => dedupeMatches((results.data?.events ?? []).filter(isAllowedCompetition)).length, [results.data?.events]);
+  const worldCupCount = useMemo(
+    () => visibleItems.filter((e: FootballEvent) => isWorldCupLabel(competitionKeyOf(e)) || isWorldCupLabel(competitionLabelOf(e))).length,
+    [visibleItems]
+  );
   const updatedAt = current.data?.fetchedAt;
 
   const groups = useMemo(() => sortedGroups(groupByComp(visibleItems)), [visibleItems]);
@@ -434,11 +511,12 @@ export const FootballWidget = React.memo(function FootballWidget() {
     merged.set('TOUT', { key: 'TOUT', label: 'Tout', count: visibleItems.length, emblem: null });
 
     // add backend comps first
-    backendComps.forEach((comp: any) => {
+    backendComps.forEach((comp: { code?: string; name?: string; count?: number; emblem?: string | null }) => {
+      if (!comp.code) return;
       merged.set(comp.code, {
         key: comp.code,
         label: translateCompetitionLabel(comp.name ?? comp.code),
-        count: comp.count,
+        count: comp.count ?? 0,
         emblem: comp.emblem ?? null,
       });
     });
@@ -449,7 +527,8 @@ export const FootballWidget = React.memo(function FootballWidget() {
       const label = translateCompetitionLabel(league.label);
       if (existing) {
         if (!existing.emblem && league.emblem) existing.emblem = league.emblem;
-        existing.count = Math.max(existing.count ?? 0, league.count);
+        // Keep badge count aligned with currently visible/deduped matches from the widget data.
+        existing.count = league.count;
         existing.label = existing.label || label;
         merged.set(league.key, existing);
       } else {
@@ -461,17 +540,40 @@ export const FootballWidget = React.memo(function FootballWidget() {
     const final = Array.from(merged.values()).filter((entry) => {
       if (entry.key === 'TOUT') return true;
       const allowed = ALLOWED_COMPETITION_KEYWORDS.some((allowed) => normalizeName(entry.label).includes(allowed) || normalizeName(entry.key).includes(allowed));
-      return allowed && Boolean(entry.emblem);
+      const worldCup = isWorldCupLabel(entry.label) || isWorldCupLabel(entry.key);
+      return allowed && (Boolean(entry.emblem) || worldCup);
     });
 
     return final;
   }, [current.data?.competitions, groups, leagues, visibleItems.length]);
+  const defaultLeague = useMemo(
+    () => allCompetitions.find((league) => league.key === 'TOUT') ?? null,
+    [allCompetitions]
+  );
+  const nonDefaultCompetitions = useMemo(
+    () => allCompetitions.filter((league) => league.key !== 'TOUT' && !isWorldCupLabel(league.key) && !isWorldCupLabel(league.label)),
+    [allCompetitions]
+  );
 
   useEffect(() => {
     if (activeLeague === 'TOUT') return;
 
+    if (activeLeague === 'WORLD_CUP') {
+      const hasWorldCupMatches = visibleItems.some((event: FootballEvent) => {
+        const key = competitionKeyOf(event);
+        const label = competitionLabelOf(event);
+        return isWorldCupLabel(key) || isWorldCupLabel(label);
+      });
+
+      if (!hasWorldCupMatches) {
+        setActiveLeague('TOUT');
+        setPage(0);
+      }
+      return;
+    }
+
     const hasCurrentLeague = allCompetitions.some((league) => league.key === activeLeague);
-    const leagueHasMatches = visibleItems.some((event: any) => {
+    const leagueHasMatches = visibleItems.some((event: FootballEvent) => {
       const key = competitionKeyOf(event);
       const label = competitionLabelOf(event);
       return key === activeLeague || normalizeName(key) === normalizeName(activeLeague) || normalizeName(label) === normalizeName(activeLeague);
@@ -514,27 +616,51 @@ export const FootballWidget = React.memo(function FootballWidget() {
     () => {
       const allEvents = visibleItems;
 
-      const compareByDate = (a: any, b: any) => {
+      const compareByDate = (a: FootballEvent, b: FootballEvent) => {
         const dateA = new Date(a.utcDate ?? 0).getTime();
         const dateB = new Date(b.utcDate ?? 0).getTime();
         // For results tab we want newest first, otherwise keep ascending (closest/soonest first)
         return tab === 'results' ? dateB - dateA : dateA - dateB;
       };
 
-      const sameCompetition = (event: any) => {
+      const sameCompetition = (event: FootballEvent) => {
         if (activeLeague === 'TOUT') return true;
         const key = competitionKeyOf(event);
         const label = competitionLabelOf(event);
+
+        // Special championship filters (support both human keys and codes)
+        if (activeLeague === 'CHAMPIONS_LEAGUE' || activeLeague === 'CL') {
+          const k = normalizeName(key);
+          const l = normalizeName(label);
+          return k.includes('champions') || l.includes('champions') || k.includes('ucl') || l.includes('ucl') || k.includes('liguedeschampions');
+        }
+        if (activeLeague === 'EUROPA_LEAGUE' || activeLeague === 'UEL') {
+          const k = normalizeName(key);
+          const l = normalizeName(label);
+          return k.includes('europa') || l.includes('europa') || k.includes('uel') || l.includes('uel') || k.includes('europaleague');
+        }
+        if (activeLeague === 'CONFERENCE_LEAGUE' || activeLeague === 'UECL') {
+          const k = normalizeName(key);
+          const l = normalizeName(label);
+          return k.includes('conference') || l.includes('conference') || k.includes('uecl') || l.includes('uecl') || k.includes('conferenceleague');
+        }
+
+        if (activeLeague === 'WORLD_CUP' || activeLeague === 'COUPE_DU_MONDE' || activeLeague === 'worldcup' || activeLeague === 'cdm') {
+          const k = normalizeName(key);
+          const l = normalizeName(label);
+          return k.includes('worldcup') || l.includes('worldcup') || k.includes('cdm') || l.includes('cdm') || l.includes('coupedumonde') || k.includes('coupedumonde');
+        }
+
         return key === activeLeague || normalizeName(key) === normalizeName(activeLeague) || normalizeName(label) === normalizeName(activeLeague);
       };
 
       if (activeLeague === 'TOUT') {
         const sortedEvents = [...allEvents].sort(compareByDate);
-        return [['', sortedEvents]] as [string, any[]][];
+        return [['', sortedEvents]] as [string, FootballEvent[]][];
       }
 
       // Filter events by code or displayed league name.
-      const filtered = allEvents.filter((e: any) => sameCompetition(e));
+      const filtered = allEvents.filter((e: FootballEvent) => sameCompetition(e));
       const grouped = groupByComp(filtered);
 
       // Ensure matches inside each competition follow the same ordering
@@ -563,7 +689,7 @@ export const FootballWidget = React.memo(function FootballWidget() {
           cursor += 1;
           return inPage;
         });
-        return [name, selected] as [string, any[]];
+        return [name, selected] as [string, FootballEvent[]];
       })
       .filter(([, matches]) => matches.length > 0);
   }, [filteredGroups, page, shouldPaginate]);
@@ -572,7 +698,7 @@ export const FootballWidget = React.memo(function FootballWidget() {
   const pageStart = shouldPaginate && totalMatches > 0 ? page * MATCHES_PER_PAGE + 1 : 1;
   const pageEnd = shouldPaginate ? Math.min(totalMatches, (page + 1) * MATCHES_PER_PAGE) : totalMatches;
 
-  const changeTab = (next: Tab) => {
+  const changeTab = (next: FootballTab) => {
     setTab(next);
     setActiveLeague('TOUT');
     setPage(0);
@@ -580,7 +706,7 @@ export const FootballWidget = React.memo(function FootballWidget() {
 
   return (
     <Card accent="red" className="border-l-0 bg-[#161616] from-[#242424] to-[#121212] text-white">
-      <div className="relative overflow-hidden rounded-xl border border-[#ff2a2a]/35 bg-[#202020]">
+      <div className="relative overflow-visible rounded-xl border border-[#ff2a2a]/35 bg-[#202020]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(255,42,42,.36),transparent_34%),radial-gradient(circle_at_92%_12%,rgba(255,42,42,.18),transparent_24%)]" />
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#ff2a2a] to-transparent" />
 
@@ -604,7 +730,7 @@ export const FootballWidget = React.memo(function FootballWidget() {
           </div>
 
           <div className="grid grid-cols-3 gap-1.5">
-            {(Object.keys(TAB_CONFIG) as Tab[]).map((id) => {
+            {(Object.keys(TAB_CONFIG) as FootballTab[]).map((id) => {
               const count = id === 'live' ? liveCount : id === 'today' ? todayCount : resultsCount;
               return (
                 <button
@@ -635,8 +761,67 @@ export const FootballWidget = React.memo(function FootballWidget() {
 
       {!current.isLoading && !current.error && (
         <>
-          <div className="my-3 flex gap-2 overflow-x-auto pb-1">
-            {allCompetitions.map((league) => (
+          <div className="my-3 flex gap-2 flex-nowrap overflow-x-auto pb-1">
+            {defaultLeague && (
+              <button
+                key={defaultLeague.key}
+                onClick={() => {
+                  setActiveLeague(defaultLeague.key);
+                  setPage(0);
+                }}
+                className={clsx(
+                  'flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-black uppercase transition-all',
+                  activeLeague === defaultLeague.key
+                    ? 'border-[#ff2a2a] bg-[#ff2a2a] text-white shadow-[0_0_18px_rgba(255,42,42,.30)]'
+                    : 'border-[#ff2a2a]/35 bg-[#262626] text-zinc-400 hover:border-[#ff2a2a]/80 hover:bg-[#303030] hover:text-white'
+                )}
+              >
+                {defaultLeague.emblem ? (
+                  <img
+                    src={defaultLeague.emblem}
+                    alt={defaultLeague.label}
+                    className="h-5 w-5 rounded object-contain"
+                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                  />
+                ) : (
+                  <CircleDot size={13} />
+                )}
+                <span className="ml-1">{defaultLeague.label}</span>
+                <span className={clsx(
+                  'px-1.5 py-0.5 rounded text-[9px] font-bold',
+                  defaultLeague.count === 0
+                    ? 'bg-zinc-700/50 text-zinc-400'
+                    : 'bg-white/10 text-white'
+                )}>
+                  {defaultLeague.count}
+                </span>
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                setActiveLeague('WORLD_CUP');
+                setPage(0);
+              }}
+              className={clsx(
+                'flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-black uppercase transition-all',
+                activeLeague === 'WORLD_CUP'
+                  ? 'border-[#ff2a2a] bg-[#ff2a2a] text-white shadow-[0_0_18px_rgba(255,42,42,.30)]'
+                  : 'border-[#ff2a2a]/35 bg-[#262626] text-zinc-400 hover:border-[#ff2a2a]/80 hover:bg-[#303030] hover:text-white'
+              )}
+            >
+              <Trophy size={14} />
+              <span>Coupe du Monde</span>
+              <span className={clsx(
+                'px-1.5 py-0.5 rounded text-[9px] font-bold',
+                worldCupCount === 0
+                  ? 'bg-zinc-700/50 text-zinc-400'
+                  : 'bg-white/10 text-white'
+              )}>
+                {worldCupCount}
+              </span>
+            </button>
+            {nonDefaultCompetitions.map((league) => (
               <button
                 key={league.key}
                 onClick={() => {
@@ -743,7 +928,16 @@ export const FootballWidget = React.memo(function FootballWidget() {
   );
 });
 
-function MatchCard({ match, selected, onSelect, mode, competitionName, competitionEmblem, showCompetitionHeader, nowTick }: any) {
+function MatchCard({ match, selected, onSelect, mode, competitionName, competitionEmblem, showCompetitionHeader, nowTick }: {
+  match: FootballEvent;
+  selected: boolean;
+  onSelect: (match: FootballEvent) => void;
+  mode: FootballTab;
+  competitionName: string;
+  competitionEmblem?: string | null;
+  showCompetitionHeader: boolean;
+  nowTick?: number;
+}) {
   const isResult = mode === 'results';
 
   return (
@@ -777,7 +971,7 @@ function MatchCard({ match, selected, onSelect, mode, competitionName, competiti
       </button>
 
       {!isResult ? (
-        <OddsDock match={match} odds={getBookOdds(match)} />
+        <OddsDock match={match} odds={getBookOdds(match)} nowTick={nowTick} />
       ) : (
         <button
           onClick={() => onSelect(match)}
@@ -790,15 +984,15 @@ function MatchCard({ match, selected, onSelect, mode, competitionName, competiti
   );
 }
 
-function MatchFaceoff({ match, mode, compact, nowTick }: { match: any; mode: Tab; compact?: boolean; nowTick?: number }) {
+function MatchFaceoff({ match, mode, compact, nowTick }: { match: FootballEvent; mode: FootballTab; compact?: boolean; nowTick?: number }) {
   const homeScore = scoreOf(match, 'home');
   const awayScore = scoreOf(match, 'away');
   const center =
     mode === 'today'
-      ? { top: smartDate(match.utcDate), main: formatTime(match.utcDate) }
+      ? { top: smartDate(match.utcDate ?? ''), main: formatTime(match.utcDate ?? '') }
       : mode === 'live'
         ? { top: statusLabel(match, nowTick), main: `${homeScore ?? 0}-${awayScore ?? 0}` }
-        : { top: smartDate(match.utcDate), main: `${homeScore ?? '-'}-${awayScore ?? '-'}` };
+        : { top: smartDate(match.utcDate ?? ''), main: `${homeScore ?? '-'}-${awayScore ?? '-'}` };
   const liveSourceLabel = match.liveSource === 'sofascore'
     ? 'Sofascore live'
     : '';
@@ -844,7 +1038,7 @@ function MatchFaceoff({ match, mode, compact, nowTick }: { match: any; mode: Tab
   );
 }
 
-function SideTeam({ team, side }: { team: any; side: 'home' | 'away' }) {
+function SideTeam({ team, side }: { team: FootballEvent['homeTeam']; side: 'home' | 'away' }) {
   return (
     <div className="flex min-w-0 flex-col items-center justify-center gap-0.5 text-center">
       <div className="flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-[#1f1f1f]">
@@ -866,17 +1060,18 @@ function SideTeam({ team, side }: { team: any; side: 'home' | 'away' }) {
   );
 }
 
-function OddsDock({ match, odds, compact }: { match: any; odds: Odds; compact?: boolean }) {
-  const lowSide = odds.win <= odds.loss ? 'home' : 'away';
+function OddsDock({ match, odds, compact, nowTick }: { match: FootballEvent; odds: Odds; compact?: boolean; nowTick?: number }) {
+  const displayOdds = getLiveOdds(match, odds, nowTick);
+  const lowSide = displayOdds.win <= displayOdds.loss ? 'home' : 'away';
   const highSide = lowSide === 'home' ? 'away' : 'home';
-  const weights = [odds.win, odds.draw, odds.loss].map((v) => (v > 0 ? 1 / v : 0));
+  const weights = [displayOdds.win, displayOdds.draw, displayOdds.loss].map((v) => (v > 0 ? 1 / v : 0));
   const weightTotal = weights.reduce((sum, v) => sum + v, 0) || 1;
   const strength = weights.map((v) => v / weightTotal);
   const barToneBySide = (() => {
     const ranked = [
-      { side: 'home' as const, value: odds.win },
-      { side: 'draw' as const, value: odds.draw },
-      { side: 'away' as const, value: odds.loss },
+      { side: 'home' as const, value: displayOdds.win },
+      { side: 'draw' as const, value: displayOdds.draw },
+      { side: 'away' as const, value: displayOdds.loss },
     ]
       .slice()
       .sort((a, b) => a.value - b.value);
@@ -895,9 +1090,9 @@ function OddsDock({ match, odds, compact }: { match: any; odds: Odds; compact?: 
         compact ? 'px-1 py-1' : 'px-2 py-2'
       )}
     >
-      <OddTile label={match.homeTeam?.shortName ?? 'Dom.'} value={odds.win} isLow={lowSide === 'home'} isHigh={highSide === 'home'} strength={strength[0]} barTone={barToneBySide.home} />
-      <OddTile label="Nul" value={odds.draw} draw strength={strength[1]} barTone={barToneBySide.draw} />
-      <OddTile label={match.awayTeam?.shortName ?? 'Ext.'} value={odds.loss} isLow={lowSide === 'away'} isHigh={highSide === 'away'} strength={strength[2]} barTone={barToneBySide.away} />
+      <OddTile label={match.homeTeam?.shortName ?? 'Dom.'} value={displayOdds.win} baseValue={odds.win} isLow={lowSide === 'home'} isHigh={highSide === 'home'} strength={strength[0]} barTone={barToneBySide.home} />
+      <OddTile label="Nul" value={displayOdds.draw} baseValue={odds.draw} draw strength={strength[1]} barTone={barToneBySide.draw} />
+      <OddTile label={match.awayTeam?.shortName ?? 'Ext.'} value={displayOdds.loss} baseValue={odds.loss} isLow={lowSide === 'away'} isHigh={highSide === 'away'} strength={strength[2]} barTone={barToneBySide.away} />
     </div>
   );
 }
@@ -905,6 +1100,7 @@ function OddsDock({ match, odds, compact }: { match: any; odds: Odds; compact?: 
 function OddTile({
   label,
   value,
+  baseValue,
   draw,
   isLow,
   isHigh,
@@ -913,13 +1109,31 @@ function OddTile({
 }: {
   label: string;
   value: number;
+  baseValue: number;
   draw?: boolean;
   isLow?: boolean;
   isHigh?: boolean;
   strength: number;
   barTone?: 'low' | 'mid' | 'high';
 }) {
+  const [flashDirection, setFlashDirection] = useState<'up' | 'down' | null>(null);
+  const previousValueRef = useRef(value);
+
+  useEffect(() => {
+    if (previousValueRef.current === value) return;
+
+    const direction = value > previousValueRef.current ? 'up' : 'down';
+    previousValueRef.current = value;
+    setFlashDirection(direction);
+
+    const timeout = window.setTimeout(() => setFlashDirection(null), 900);
+    return () => window.clearTimeout(timeout);
+  }, [value]);
+
   const barWidth = `${Math.max(18, Math.min(86, Math.round(18 + strength * 62)))}%`;
+  const trendTone = flashDirection === 'up' ? 'text-emerald-300' : flashDirection === 'down' ? 'text-[#ff5b5b]' : 'text-transparent';
+  const trendBg = flashDirection === 'up' ? 'bg-emerald-400/12 border-emerald-400/30' : flashDirection === 'down' ? 'bg-[#ff2a2a]/14 border-[#ff2a2a]/30' : 'bg-transparent border-transparent';
+  const TrendIcon = flashDirection === 'up' ? ArrowUpRight : ArrowDownRight;
 
   return (
     <button
@@ -933,11 +1147,16 @@ function OddTile({
             : isHigh
               ? 'border-[#fde047] bg-[#fde047] text-black shadow-[0_0_20px_rgba(253,224,71,.30)]'
               : 'border-white/8 bg-[#262626] text-white',
+        flashDirection ? `${trendBg} shadow-[0_0_16px_rgba(255,255,255,.06)] ring-1 ring-inset` : '',
         'shadow-[0_6px_12px_rgba(0,0,0,.20)] hover:-translate-y-0.5 hover:border-white/12 hover:bg-[#2b2b2b]'
       )}
     >
       <span className={clsx('block truncate text-[7px] font-black uppercase tracking-wider', draw ? 'text-[#fde047]' : isLow ? 'text-black' : isHigh ? 'text-black' : 'text-zinc-500')}>{label}</span>
-      <span className={clsx('mt-0.5 block font-mono text-[13px] font-black leading-none', draw ? 'text-[#fde047]' : isLow ? 'text-black' : isHigh ? 'text-black' : 'text-zinc-200')}>{value.toFixed(2)}</span>
+      <span className={clsx('mt-0.5 flex items-center justify-center gap-1 font-mono text-[13px] font-black leading-none', draw ? 'text-[#fde047]' : isLow ? 'text-black' : isHigh ? 'text-black' : 'text-zinc-200')}>
+        {value.toFixed(2)}
+        {flashDirection ? <TrendIcon size={10} className={clsx('shrink-0', trendTone)} /> : null}
+      </span>
+      <span className="mt-0.5 block text-[7px] font-black uppercase tracking-[0.14em] text-transparent">.</span>
       <span className="mt-1 block h-1 overflow-hidden rounded-full bg-white/8">
         <span
           className={clsx(
@@ -951,7 +1170,7 @@ function OddTile({
   );
 }
 
-function scoreOf(match: any, side: 'home' | 'away') {
+function scoreOf(match: FootballEvent, side: 'home' | 'away') {
   // Prefer liveDetails score (from Sofascore) when available
   const liveScore = match.liveDetails?.score;
   if (liveScore && (liveScore.home != null || liveScore.away != null)) {

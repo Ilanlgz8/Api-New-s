@@ -1,9 +1,10 @@
 import { CACHE_TTL, setCacheEntry, withCache } from './cache';
+import { normalizeName } from './footballHelpers';
+import { enrichMatch, normalizeOddsEvent } from './footballOdds';
 
 const FD_BASE = 'https://api.football-data.org/v4';
 const ODDS_BASE = 'https://api.the-odds-api.com/v4';
 const ODDS_SPORT_KEYS: Record<string, string> = {
-  FL1: 'soccer_france_ligue_one',
   CL:  'soccer_uefa_champs_league',
   PL:  'soccer_epl',
   PD:  'soccer_spain_la_liga',
@@ -13,67 +14,6 @@ const ODDS_SPORT_KEYS: Record<string, string> = {
 
 function fdHeaders() {
   return { 'X-Auth-Token': process.env.FOOTBALL_API_KEY ?? '' };
-}
-
-function normalizeName(value = '') {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\b(fc|cf|sc|afc|as|ac|calcio|club|de|the)\b/g, '')
-    .replace(/[^a-z0-9]/g, '');
-}
-
-function outcomePrice(outcomes: any[], teamName: string) {
-  const target = normalizeName(teamName);
-  return outcomes.find((o: any) => {
-    const name = normalizeName(o.name);
-    return name === target || name.includes(target) || target.includes(name);
-  })?.price ?? null;
-}
-
-function median(values: number[]) {
-  if (!values.length) return null;
-  const sorted = [...values].sort((a, b) => a - b);
-  const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[middle - 1] + sorted[middle]) / 2
-    : sorted[middle];
-}
-
-function bookmakerPrices(bookmaker: any, event: any) {
-  const market = bookmaker?.markets?.find((m: any) => m.key === 'h2h');
-  const outcomes = market?.outcomes ?? [];
-
-  return {
-    home: outcomePrice(outcomes, event.home_team),
-    draw: outcomes.find((o: any) => normalizeName(o.name) === 'draw')?.price ?? null,
-    away: outcomePrice(outcomes, event.away_team),
-  };
-}
-
-function normalizeOddsEvent(event: any) {
-  const bookmakers = event.bookmakers ?? [];
-  const pricesByBookmaker = bookmakers.map((bookmaker: any) => bookmakerPrices(bookmaker, event));
-  const homePrices = pricesByBookmaker.map((prices: any) => prices.home).filter((value: any) => typeof value === 'number');
-  const drawPrices = pricesByBookmaker.map((prices: any) => prices.draw).filter((value: any) => typeof value === 'number');
-  const awayPrices = pricesByBookmaker.map((prices: any) => prices.away).filter((value: any) => typeof value === 'number');
-  const consensusPrices = {
-    home: median(homePrices),
-    draw: median(drawPrices),
-    away: median(awayPrices),
-  };
-  const bookmaker = bookmakers.find((b: any) => b.key === 'betclic') ?? bookmakers.find((b: any) => b.key === 'pinnacle') ?? bookmakers[0];
-  const sourceLabel = bookmakers.length > 1 ? 'Consensus' : bookmaker?.title ?? null;
-
-  return {
-    home: event.home_team,
-    away: event.away_team,
-    commenceTime: event.commence_time,
-    bookmaker: sourceLabel,
-    lastUpdate: bookmakers[0]?.last_update ?? null,
-    prices: consensusPrices,
-  };
 }
 
 async function getOddsByCompetition(codes: string[]) {
@@ -95,31 +35,6 @@ async function getOddsByCompetition(codes: string[]) {
   }));
 
   return Object.fromEntries(entries);
-}
-
-function findOddsForMatch(match: any, oddsByCompetition: Record<string, any[]>) {
-  const events = oddsByCompetition[match.competition?.code] ?? [];
-  const home = normalizeName(match.homeTeam?.name ?? match.homeTeam?.shortName ?? '');
-  const away = normalizeName(match.awayTeam?.name ?? match.awayTeam?.shortName ?? '');
-
-  return events.find((event) => {
-    const eventHome = normalizeName(event.home);
-    const eventAway = normalizeName(event.away);
-    const namesMatch =
-      (eventHome.includes(home) || home.includes(eventHome)) &&
-      (eventAway.includes(away) || away.includes(eventAway));
-    return namesMatch && (event.commenceTime?.slice(0, 10) === match.utcDate?.slice(0, 10));
-  }) ?? null;
-}
-
-function enrichMatch(m: any, oddsByCompetition: Record<string, any[]> = {}) {
-  const publicOdds = findOddsForMatch(m, oddsByCompetition);
-  return {
-    ...m,
-    competitionName: m.competition?.name ?? '',
-    leagueName: m.competition?.name ?? '',
-    publicOdds,
-  };
 }
 
 let liveStore: { matches: any[]; fetchedAt: number } = { matches: [], fetchedAt: 0 };
