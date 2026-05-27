@@ -3,448 +3,60 @@ import { execFile } from 'node:child_process';
 import { readFileSync, writeFileSync, readdirSync, unlinkSync, mkdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { CACHE_TTL, getCacheEntry, setCacheEntry, withCache, withStaleCache } from '@/lib/cache';
-import { fetchRssFeed, fetchWikipediaCompetition } from '@/lib/fallbackSources';
 import { getLiveData, startFootballPoller } from '@/lib/footballPoller';
-import { fetchSofascoreLiveMatches, fetchSofascoreFinishedMatches, mapSofascoreMatch } from '@/lib/sofascoreLive';
+import { fetchSofascoreLiveMatches, fetchSofascoreFinishedMatches, fetchSofascoreFinishedMatchesForCompetition, fetchSofascoreCompetitionWindow, mapSofascoreMatch } from '@/lib/sofascoreLive';
 import { startFlashscoreLive, getFlashscoreLiveMatches, mapFlashscoreMatch } from '@/lib/flashscoreLive';
 import { storeScore, enrichWithStoredScore } from '@/lib/scoreDatabase';
-
-export const runtime = 'nodejs';
-
-const FD_BASE = 'https://api.football-data.org/v4';
-const AF_BASE = 'https://api-football-v1.p.rapidapi.com/v3';
-const ODDS_BASE = 'https://api.the-odds-api.com/v4';
-const TSDB_BASE = 'https://www.thesportsdb.com/api/v1/json/3';
-const L1_OFFICIAL_BASE = 'https://ma-api.ligue1.fr/championships-daily-calendars';
-const PULSELIVE_BASE = 'https://sdp-prem-prod.premier-league-prod.pulselive.com/api/v1';
-const OL_BASE = 'https://api.openligadb.de';
-const OL_LEAGUE_BY_CODE: Record<string, string> = {
-  FL1: 'FR1',
-  BL1: 'BL1',
-  CL: 'CL',
-};
-// Only major accessible championships via Football-Data free tier
-const COMPETITIONS = ['FL1', 'CL', 'PL', 'PD', 'SA', 'BL1'];
-const AF_LEAGUE_BY_CODE: Record<string, number> = {
-  FL1: 61,
-  PL: 39,
-  PD: 140,
-  SA: 135,
-  BL1: 78,
-  CL: 2,
-};
-const COMP_INFO: Record<string, { name: string; emblem?: string | null }> = {
-  FL1: { name: 'Ligue 1', emblem: 'https://r2.thesportsdb.com/images/media/league/badge/9f7z9d1742983155.png' },
-  CL: { name: 'Champions League', emblem: 'https://r2.thesportsdb.com/images/media/league/badge/uefa_champions_league.png' },
-  PL: { name: 'Premier League', emblem: 'https://r2.thesportsdb.com/images/media/league/badge/gasy9d1737743125.png' },
-  PD: { name: 'La Liga', emblem: 'https://r2.thesportsdb.com/images/media/league/badge/ja4it51687628717.png' },
-  SA: { name: 'Serie A', emblem: 'https://r2.thesportsdb.com/images/media/league/badge/67q3q21679951383.png' },
-  BL1: { name: 'Bundesliga', emblem: 'https://r2.thesportsdb.com/images/media/league/badge/teqh1b1679952008.png' },
-};
-const ODDS_SPORT_KEYS: Record<string, string> = {
-  FL1: 'soccer_france_ligue_one',
-  CL: 'soccer_uefa_champs_league',
-  PL: 'soccer_epl',
-  PD: 'soccer_spain_la_liga',
-  SA: 'soccer_italy_serie_a',
-  BL1: 'soccer_germany_bundesliga',
-};
-
-const WIDGET_RETENTION_DAYS = 5;
-
-// Per-competition source priority (try in order)
-// Source monitoring (track successes/failures per source)
-type SourceStats = { successes: number; failures: number; lastFetch?: number };
-const SOURCE_STATS: Record<string, SourceStats> = {
-  'football-data': { successes: 0, failures: 0 },
-  'api-football': { successes: 0, failures: 0 },
-  'thesportsdb': { successes: 0, failures: 0 },
-  'openligadb': { successes: 0, failures: 0 },
-  'official-ligue1': { successes: 0, failures: 0 },
-  'pulselive': { successes: 0, failures: 0 },
-  'rss': { successes: 0, failures: 0 },
-  'wikipedia': { successes: 0, failures: 0 },
-};
-
-function recordSourceAttempt(source: string, success: boolean) {
-  const stats = SOURCE_STATS[source];
-  if (stats) {
-    if (success) stats.successes++;
-    else stats.failures++;
-    stats.lastFetch = Date.now();
-  }
-}
-
-function logSourceStats() {
-  const summary = Object.entries(SOURCE_STATS).map(([src, stats]) => {
-    const ratio = stats.successes + stats.failures > 0 
-      ? `${(100 * stats.successes / (stats.successes + stats.failures)).toFixed(0)}%`
-      : 'N/A';
-    return `${src}: ${stats.successes} ok / ${stats.failures} err (${ratio})`;
-  }).join(', ');
-  console.log(`[Football API] Source stats: ${summary}`);
-}
-
-const COMP_SOURCES: Record<string, string[]> = {
-  FL1: ['official-ligue1', 'football-data', 'thesportsdb', 'rss', 'wikipedia', 'openligadb', 'api-football'],
-  BL1: ['openligadb', 'football-data', 'api-football', 'thesportsdb'],
-  CL:  ['football-data', 'openligadb', 'thesportsdb', 'rss', 'wikipedia', 'api-football'],
-  PL:  ['pulselive', 'football-data', 'api-football', 'thesportsdb', 'rss', 'wikipedia'],
-  PD:  ['football-data', 'api-football', 'thesportsdb', 'rss', 'wikipedia'],
-  SA:  ['football-data', 'api-football', 'thesportsdb', 'rss', 'wikipedia'],
-};
-
-// **DAILY PREFETCH SYSTEM** - Reduce API calls to once per day
-let lastDailyPrefetch = { date: '', timestamp: 0 };
-function getTodayDateStr(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-function isDailyPrefetchNeeded(): boolean {
-  const today = getTodayDateStr();
-  return today !== lastDailyPrefetch.date;
-}
-
-// Simple per-source rate limiting (milliseconds)
-const SOURCE_MIN_INTERVAL_MS: Record<string, number> = {
-  'football-data': 500,
-  'api-football': 500,
-  'openligadb': 500,
-  'thesportsdb': 500,
-  'pulselive': 500,
-};
-const lastRequestAt = new Map<string, number>();
+import { normalizeEventCompetition } from '@/lib/footballRouteHelpers';
+import { ODDS_BASE, ODDS_SPORT_KEYS, enrichMatch, getOddsByCompetition } from '@/lib/footballOdds';
+import { mapPulseliveMatch, fetchPulseliveCompetitionEvents } from '@/lib/footballPulselive';
+import * as FFD from '@/lib/footballFootballData';
+import { COMPETITIONS, COMP_INFO, AF_LEAGUE_BY_CODE, WIDGET_RETENTION_DAYS, L1_OFFICIAL_BASE, COMP_SOURCES, SOURCE_STATS, SOURCE_MIN_INTERVAL_MS } from '@/lib/footballConstants';
 
 async function throttleFor(source: string) {
-  const min = SOURCE_MIN_INTERVAL_MS[source] ?? 500;
-  const last = lastRequestAt.get(source) ?? 0;
-  const now = Date.now();
-  const diff = now - last;
-  if (diff < min) {
-    await new Promise((res) => setTimeout(res, min - diff));
+  const min = SOURCE_MIN_INTERVAL_MS[source] ?? 0;
+  const stats = SOURCE_STATS[source];
+  const last = stats?.lastFetch ?? 0;
+  const elapsed = Date.now() - last;
+  if (elapsed < min) {
+    await new Promise((resolve) => setTimeout(resolve, min - elapsed));
   }
-  lastRequestAt.set(source, Date.now());
+  try {
+    if (stats) stats.lastFetch = Date.now();
+  } catch {}
 }
 
-async function fetchCompetitionEventsByPriority(code: string, startOffset: number, endOffset: number, type: 'today' | 'results') {
-  let fallbackWithoutScore: any[] | null = null;
-  let mergedTodayCandidates: any[] = [];
-  const addTodayCandidate = (items: any[] | null | undefined) => {
-    if (!items || items.length === 0) return;
-    mergedTodayCandidates = dedupeEvents([...mergedTodayCandidates, ...items]);
-  };
-  const pickCandidate = (items: any[] | null | undefined, source: keyof typeof SOURCE_STATS) => {
-    if (!items || items.length === 0) {
-      recordSourceAttempt(source, false);
-      return null;
-    }
-
-    if (type !== 'results') {
-      recordSourceAttempt(source, true);
-      return items;
-    }
-
-    const scoredFinishedCount = items.filter((e: any) => {
-      const isFinished = e.status === 'FINISHED';
-      const hasScore = e.score?.fullTime?.home !== null && e.score?.fullTime?.away !== null;
-      return isFinished && hasScore;
-    }).length;
-
-    if (scoredFinishedCount > 0) {
-      recordSourceAttempt(source, true);
-      return items;
-    }
-
-    // Keep a best-effort fallback if no source provides scored results.
-    if (!fallbackWithoutScore || items.length > fallbackWithoutScore.length) {
-      fallbackWithoutScore = items;
-    }
-    recordSourceAttempt(source, false);
-    return null;
-  };
-
-  const sources = COMP_SOURCES[code] ?? ['football-data', 'api-football', 'thesportsdb'];
-  for (const src of sources) {
-    try {
-      await throttleFor(src);
-      if (src === 'football-data') {
-        const res = await fetchFootballDataCompetitionEvents(code, startOffset, endOffset, type);
-        const picked = pickCandidate(res, 'football-data');
-        if (picked) {
-          if (type === 'today') {
-            addTodayCandidate(picked);
-            if (mergedTodayCandidates.length >= TSDB_LOOK_AHEAD_MIN_MATCHES) return mergedTodayCandidates;
-          } else {
-            return picked;
-          }
-        }
-      }
-      if (src === 'api-football') {
-        const leagueId = AF_LEAGUE_BY_CODE[code];
-        if (leagueId) {
-          const res = await fetchApiFootballCompetitionEvents(code, leagueId, startOffset, endOffset, type);
-          const picked = pickCandidate(res, 'api-football');
-          if (picked) {
-            if (type === 'today') {
-              addTodayCandidate(picked);
-              if (mergedTodayCandidates.length >= TSDB_LOOK_AHEAD_MIN_MATCHES) return mergedTodayCandidates;
-            } else {
-              return picked;
-            }
-          }
-        }
-      }
-      if (src === 'openligadb') {
-        if (OL_LEAGUE_BY_CODE[code]) {
-          const res = await fetchOpenLigaDbCompetitionEvents(code, startOffset, endOffset, type);
-          const picked = pickCandidate(res, 'openligadb');
-          if (picked) {
-            if (type === 'today') {
-              addTodayCandidate(picked);
-              if (mergedTodayCandidates.length >= TSDB_LOOK_AHEAD_MIN_MATCHES) return mergedTodayCandidates;
-            } else {
-              return picked;
-            }
-          }
-        }
-      }
-      if (src === 'pulselive') {
-        if (code === 'PL') {
-          const res = await fetchPulseliveCompetitionEvents(startOffset, endOffset, type);
-          const picked = pickCandidate(res, 'pulselive');
-          if (picked) {
-            if (type === 'today') {
-              addTodayCandidate(picked);
-              if (mergedTodayCandidates.length >= TSDB_LOOK_AHEAD_MIN_MATCHES) return mergedTodayCandidates;
-            } else {
-              return picked;
-            }
-          }
-        }
-      }
-      if (src === 'official-ligue1') {
-        if (code === 'FL1') {
-          const res = await fetchLigue1OfficialCalendarEvents(type, startOffset, endOffset);
-          const picked = pickCandidate(res, 'official-ligue1');
-          if (picked) {
-            if (type === 'today') {
-              addTodayCandidate(picked);
-              if (mergedTodayCandidates.length >= TSDB_LOOK_AHEAD_MIN_MATCHES) return mergedTodayCandidates;
-            } else {
-              return picked;
-            }
-          }
-        }
-      }
-      if (src === 'thesportsdb') {
-        const nextEvents = await fetchSportsDbCompetitionNextEvents(code, startOffset, endOffset, type);
-        const pickedNext = pickCandidate(nextEvents, 'thesportsdb');
-        if (pickedNext) {
-          if (type === 'today') {
-            addTodayCandidate(pickedNext);
-            if (mergedTodayCandidates.length >= TSDB_LOOK_AHEAD_MIN_MATCHES) return mergedTodayCandidates;
-          } else {
-            return pickedNext;
-          }
-        }
-
-        const seasonal = await fetchSportsDbCompetitionSeasonEvents(code, startOffset, endOffset, type);
-        const pickedSeasonal = pickCandidate(seasonal, 'thesportsdb');
-        if (pickedSeasonal) {
-          if (type === 'today') {
-            addTodayCandidate(pickedSeasonal);
-            if (mergedTodayCandidates.length >= TSDB_LOOK_AHEAD_MIN_MATCHES) return mergedTodayCandidates;
-          } else {
-            return pickedSeasonal;
-          }
-        }
-
-        const all = await fetchSportsDbWindow(startOffset, endOffset);
-        const filtered = (all ?? []).filter((m: any) => m.competition?.code === code);
-        const pickedAll = pickCandidate(filtered, 'thesportsdb');
-        if (pickedAll) {
-          if (type === 'today') {
-            addTodayCandidate(pickedAll);
-            if (mergedTodayCandidates.length >= TSDB_LOOK_AHEAD_MIN_MATCHES) return mergedTodayCandidates;
-          } else {
-            return pickedAll;
-          }
-        }
-      }
-      if (src === 'rss') {
-        // try known RSS feeds (best-effort)
-        const feeds: Record<string, string[]> = {
-          FL1: ['https://www.ligue1.com/rss'],
-          PL: ['https://www.premierleague.com/feeds/rss'],
-          PD: ['https://www.laliga.com/en-GB/rss'],
-          SA: ['https://www.legaseriea.it/en/rss'],
-          BL1: [],
-          CL: ['https://www.uefa.com/rssfeed/']
-        };
-        const urls = feeds[code] ?? [];
-        let rssSuccess = false;
-        for (const u of urls) {
-          try {
-            const items = await fetchRssFeed(u);
-            if (items && items.length) {
-              recordSourceAttempt('rss', true);
-              rssSuccess = true;
-              const mapped = items.map((it: any) => ({ id: `rss:${u}:${it.date}:${it.title}`, utcDate: it.date, homeTeam: { name: it.title.split(' - ')[0] ?? it.title }, awayTeam: { name: it.title.split(' - ')[1] ?? '' }, competition: { code }, status: 'SCHEDULED' }));
-              if (type === 'today') {
-                addTodayCandidate(mapped);
-                if (mergedTodayCandidates.length >= TSDB_LOOK_AHEAD_MIN_MATCHES) return mergedTodayCandidates;
-                continue;
-              }
-              return mapped;
-            }
-          } catch (e) {
-            // continue
-          }
-        }
-        if (!rssSuccess) recordSourceAttempt('rss', false);
-      }
-      if (src === 'wikipedia') {
-        try {
-          const wiki = await fetchWikipediaCompetition(code, startOffset, endOffset);
-          if (wiki && wiki.length) {
-            recordSourceAttempt('wikipedia', true);
-            if (type === 'today') {
-              addTodayCandidate(wiki);
-              if (mergedTodayCandidates.length >= TSDB_LOOK_AHEAD_MIN_MATCHES) return mergedTodayCandidates;
-              continue;
-            }
-            return wiki;
-          }
-          recordSourceAttempt('wikipedia', false);
-        } catch (e) {
-          recordSourceAttempt('wikipedia', false);
-        }
-      }
-    } catch (e) {
-      console.warn(`Source ${src} for ${code} failed`, (e as any)?.message ?? e);
-      recordSourceAttempt(src, false);
-    }
-  }
-
-  if (code === 'FL1') {
-    try {
-      const rssEvents = await fetchRssFeed('https://www.ligue1.com/rss');
-      if (rssEvents?.length) {
-        recordSourceAttempt('rss', true);
-        const mapped = rssEvents.map((it: any) => ({
-          id: `rss:ligue1:${it.date ?? Date.now()}:${it.title}`,
-          utcDate: it.date ?? `${dateStr(startOffset)}T00:00:00Z`,
-          homeTeam: { name: it.title.split(' - ')[0] ?? it.title },
-          awayTeam: { name: it.title.split(' - ')[1] ?? '' },
-          competition: { code: 'FL1', name: 'Ligue 1', emblem: null },
-          status: 'SCHEDULED',
-        }));
-        if (type === 'today') {
-          addTodayCandidate(mapped);
-        } else {
-          return mapped;
-        }
-      }
-    } catch {
-      // ignore and continue to local archive fallback
-    }
-
-    try {
-      const wikiEvents = await fetchWikipediaCompetition('FL1', startOffset, endOffset);
-      if (wikiEvents?.length) {
-        recordSourceAttempt('wikipedia', true);
-        const mapped = wikiEvents.map((event: any) => ({
-          ...event,
-          competition: { ...(event.competition ?? {}), code: 'FL1', name: 'Ligue 1', emblem: event.competition?.emblem ?? null },
-        }));
-        if (type === 'today') {
-          addTodayCandidate(mapped);
-        } else {
-          return mapped;
-        }
-      }
-    } catch {
-      // ignore and continue
-    }
-  }
-
-  if (type === 'today' && mergedTodayCandidates.length) {
-    return mergedTodayCandidates;
-  }
-
-  return fallbackWithoutScore ?? [];
+function recordSourceAttempt(source: string, success: boolean) {
+  try {
+    const stats = SOURCE_STATS[source];
+    if (!stats) return;
+    if (success) stats.successes = (stats.successes ?? 0) + 1;
+    else stats.failures = (stats.failures ?? 0) + 1;
+    stats.lastFetch = Date.now();
+  } catch {}
 }
-
-function fdHeaders() {
-  return { 'X-Auth-Token': process.env.FOOTBALL_API_KEY ?? '' };
-}
-
-function afHeaders() {
-  const key = process.env.RAPIDAPI_KEY ?? process.env.API_FOOTBALL_KEY ?? '';
-  return {
-    'X-RapidAPI-Key': key,
-    'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com',
-  };
-}
-
-async function fetchJsonWithTimeout(url: string, init: RequestInit, timeoutMs = 5000) {
-  const res = await fetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs) }).catch(() => null);
-  if (!res || !res.ok) {
-    const txt = res ? await res.text().catch(() => '') : '';
-    throw new Error(`fetch failed${res ? ` (${res.status})` : ''}${txt ? `: ${txt}` : ''}`);
-  }
-  return res.json().catch(() => ({}));
-}
+import {
+  TSDB_LEAGUE_ID_BY_CODE,
+  fetchSportsDbCompetitionNextEvents,
+  fetchSportsDbCompetitionNextEventsFresh,
+  fetchSportsDbCompetitionNextEventsStrict,
+  fetchSportsDbCompetitionSeasonEvents,
+  fetchSportsDbWindow,
+  mapSportsDbMatch,
+} from '@/lib/footballSportsDb';
+import { fetchOpenLigaDbCompetitionEvents } from '@/lib/footballOpenLiga';
 
 async function fetchJsonWithCurl(url: string, timeoutMs = 5000) {
-  return new Promise<any>((resolve, reject) => {
-    execFile(
-      'curl',
-      ['-sL', '--max-time', String(Math.max(1, Math.ceil(timeoutMs / 1000))), url],
-      { timeout: timeoutMs + 1000 },
-      (error, stdout) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-
-        try {
-          resolve(JSON.parse(stdout || '{}'));
-        } catch (parseError) {
-          reject(parseError);
-        }
-      }
-    );
-  });
-}
-
-// Retry with exponential backoff for resilience against transient errors
-// Respects free tier limits: max 3 attempts, increasing delays (500ms, 1s, 2s)
-async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  maxAttempts = 3,
-  baseDelayMs = 500
-): Promise<T> {
-  let lastError: any;
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      return await fn();
-    } catch (err) {
-      lastError = err;
-      const errMsg = (err as Error)?.message ?? '';
-      const isTransient = errMsg.includes('429') || 
-                          errMsg.includes('timeout') ||
-                          errMsg.includes('ECONNRESET') ||
-                          errMsg.includes('ETIMEDOUT');
-      if (!isTransient || attempt === maxAttempts - 1) {
-        throw err; // Don't retry non-transient errors or on last attempt
-      }
-      // Exponential backoff: 500ms, 1s, 2s
-      const delayMs = baseDelayMs * Math.pow(2, attempt);
-      console.log(`[Retry] Attempt ${attempt + 1}/${maxAttempts}, backoff ${delayMs}ms`, (err as Error)?.message?.slice(0, 80));
-      await new Promise((res) => setTimeout(res, delayMs));
-    }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+    if (response.ok) return await response.json();
+    const text = await response.text().catch(() => '');
+    throw new Error(`fetch failed: ${response.status}${text ? ` ${text}` : ''}`);
+  } finally {
+    clearTimeout(timer);
   }
-  throw lastError;
 }
 
 function dateStr(offset = 0): string {
@@ -453,298 +65,19 @@ function dateStr(offset = 0): string {
   return d.toISOString().slice(0, 10);
 }
 
-const TSDB_LEAGUE_MATCHERS: Record<string, string[]> = {
-  FL1: ['frenchligue1', 'ligue1'],
-  CL: ['uefachampionsleague', 'championsleague'],
-  PL: ['englishpremierleague', 'premierleague'],
-  PD: ['spanishlaliga', 'laliga'],
-  SA: ['italianseriea', 'seriea'],
-  BL1: ['germanbundesliga', 'bundesliga'],
-};
-
-const TSDB_LEAGUE_ID_BY_CODE: Record<string, number> = {
-  FL1: 4334,
-  CL: 4480,
-  PL: 4328,
-  PD: 4335,
-  SA: 4332,
-  BL1: 4331,
-};
-
-function normalizeLeagueName(value = '') {
-  return normalizeName(value).replace(/league$/g, '');
-}
-
-function matchSportsDbCompetition(leagueName = '') {
-  const normalized = normalizeLeagueName(leagueName);
-  return (Object.entries(TSDB_LEAGUE_MATCHERS).find(([, matchers]) => matchers.some((matcher) => normalized.includes(matcher) || matcher.includes(normalized))) ?? [null])[0] as string | null;
-}
-
-function mapSportsDbStatus(value = '') {
-  const status = value.toLowerCase();
-  if (status.includes('finished') || status === 'ft' || status === 'aet' || status.includes('pen')) return 'FINISHED';
-  if (status === 'ht' || status.includes('half time') || status.includes('pause') || status.includes('break')) return 'PAUSED';
-  if (
-    status === '1h' ||
-    status === '2h' ||
-    status === '3h' ||
-    status === 'live' ||
-    status.includes('in progress') ||
-    status.includes('in play') ||
-    status.includes('1st half') ||
-    status.includes('2nd half')
-  ) {
-    return 'IN_PLAY';
-  }
-  return 'SCHEDULED';
-}
-
-function mapSportsDbMatch(event: any) {
-  // Filter out women's leagues, reserves, second teams, youth divisions, etc.
-  const leagueName = (event.strLeague ?? '').toLowerCase();
-  const excludedPatterns = ['women', "women's", 'female', 'reserve', 'second', 'youth', 'u-', 'u20', 'u19', 'u18', 'u17', 'elite'];
-  if (excludedPatterns.some((pattern) => leagueName.includes(pattern))) {
-    return null;
-  }
-
-  const competitionCode = matchSportsDbCompetition(event.strLeague ?? '') ?? `tsdb:${event.idLeague ?? normalizeName(event.strLeague ?? 'league')}`;
-
-  const status = mapSportsDbStatus(event.strStatus ?? '');
-  const homeScore = event.intHomeScore == null || event.intHomeScore === '' ? null : Number(event.intHomeScore);
-  const awayScore = event.intAwayScore == null || event.intAwayScore === '' ? null : Number(event.intAwayScore);
-
-  // Normalize timestamp: prefer `strTimestamp` (which is UTC) and ensure it is parsed as UTC
-  let utcDateRaw = event.strTimestamp ?? (event.dateEvent && (event.strTimeLocal ?? event.strTime) ? `${event.dateEvent}T${event.strTimeLocal ?? event.strTime}` : `${event.dateEvent ?? dateStr()}T00:00:00`);
-  // If timestamp looks like 'YYYY-MM-DDTHH:MM:SS' without timezone, append 'Z' to mark UTC
-  if (typeof utcDateRaw === 'string' && /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$/.test(utcDateRaw)) {
-    utcDateRaw = `${utcDateRaw}Z`;
-  }
-
-  return {
-    id: event.idEvent ?? `${competitionCode}:${utcDateRaw ?? Date.now()}`,
-    status,
-    utcDate: utcDateRaw,
-    homeTeam: {
-      id: event.idHomeTeam ?? null,
-      name: event.strHomeTeam ?? 'Home',
-      shortName: event.strHomeTeam ?? 'Home',
-      crest: event.strHomeTeamBadge ?? null,
-    },
-    awayTeam: {
-      id: event.idAwayTeam ?? null,
-      name: event.strAwayTeam ?? 'Away',
-      shortName: event.strAwayTeam ?? 'Away',
-      crest: event.strAwayTeamBadge ?? null,
-    },
-    competition: {
-      code: competitionCode,
-      name: event.strLeague ?? competitionCode,
-      emblem: event.strLeagueBadge ?? null,
-    },
-    score: {
-      fullTime: {
-        home: homeScore,
-        away: awayScore,
-      },
-      halfTime: {
-        home: null,
-        away: null,
-      },
-    },
-    liveDetails: status === 'IN_PLAY' || status === 'PAUSED'
-      ? {
-          minute: null,
-          source: 'thesportsdb',
-          score: {
-            home: homeScore,
-            away: awayScore,
-          },
-        }
-      : null,
-    liveSource: status === 'IN_PLAY' || status === 'PAUSED' ? 'thesportsdb' : undefined,
-    competitionName: event.strLeague ?? competitionCode,
-    leagueName: event.strLeague ?? competitionCode,
-  };
-}
-
-async function fetchSportsDbEventsForDate(date: string) {
-  const { data } = await withCache(`tsdb:soccer:${date}`, 10 * 60, async () => {
-    // Retry on transient errors (429, timeout) with exponential backoff (max 2 attempts for this endpoint)
-    const res = await retryWithBackoff(
-      () => fetch(`${TSDB_BASE}/eventsday.php?d=${date}&s=Soccer&_=${Date.now()}`, { cache: 'no-store' }),
-      2, // Lower attempt count for this less critical endpoint
-      500
-    ).catch(() => null);
-    if (!res || !res.ok) return [];
-    const json = await res.json().catch(() => ({}));
-    return (json.events ?? [])
-      .map(mapSportsDbMatch)
-      .filter((match: any) => match !== null && match !== undefined)
-      .filter((match: any) => Boolean(match.utcDate));
-  });
-
-  return data as any[];
-}
-
-function getTsdbSeasonCandidates() {
-  const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = now.getUTCMonth() + 1;
-  const currentSeasonStart = month >= 7 ? year : year - 1;
-  return [currentSeasonStart - 1, currentSeasonStart, currentSeasonStart + 1]
-    .map((start) => `${start}-${start + 1}`);
-}
-
-async function fetchSportsDbCompetitionSeasonEvents(code: string, startOffset: number, endOffset: number, type: 'today' | 'results') {
-  const leagueId = TSDB_LEAGUE_ID_BY_CODE[code];
-  if (!leagueId) return [];
-
-  const dateFrom = dateStr(startOffset);
-  const dateTo = dateStr(endOffset);
-  const seasons = getTsdbSeasonCandidates();
-
-  const seasonPages = await Promise.all(
-    seasons.map(async (season) => {
-      const { data } = await withCache(`tsdb:season:${leagueId}:${season}`, 30 * 60, async () => {
-        // Retry with backoff for season events (important for CL/FL1 if nextleague returns empty)
-        const res = await retryWithBackoff(
-          async () => {
-            const r = await fetch(`${TSDB_BASE}/eventsseason.php?id=${leagueId}&s=${season}&_=${Date.now()}`, { cache: 'no-store' });
-            if (!r || !r.ok) throw new Error(`fetch failed: ${r?.status}`);
-            return r;
-          },
-          2,
-          500
-        ).catch(() => null);
-        if (!res || !res.ok) return [];
-        const json = await res.json().catch(() => ({}));
-        return (json.events ?? [])
-          .map(mapSportsDbMatch)
-          .filter((match: any) => match !== null && match !== undefined)
-          .filter((match: any) => match.competition?.code === code);
-      });
-      return data as any[];
-    })
-  );
-
-  let filtered = seasonPages
-    .flat()
-    .filter((m: any) => {
-      const matchDate = String(m?.utcDate ?? '').slice(0, 10);
-      return matchDate && matchDate >= dateFrom && matchDate <= dateTo;
-    });
-
-  if (!filtered.length && type === 'today') {
-    const expandedTo = dateStr(endOffset + 14);
-    filtered = seasonPages
-      .flat()
-      .filter((m: any) => {
-        const matchDate = String(m?.utcDate ?? '').slice(0, 10);
-        return matchDate && matchDate >= dateFrom && matchDate <= expandedTo;
-      })
-      .slice(0, 20);
-  }
-
-  return filtered.filter((m: any) => {
-    const status = String(m?.status ?? 'SCHEDULED');
-    return type === 'today' ? status !== 'FINISHED' : status === 'FINISHED';
-  });
-}
-
-async function fetchSportsDbCompetitionNextEvents(code: string, startOffset: number, endOffset: number, type: 'today' | 'results') {
-  if (type !== 'today') return [];
-
-  const leagueId = TSDB_LEAGUE_ID_BY_CODE[code];
-  if (!leagueId) return [];
-
-  const dateFrom = dateStr(startOffset);
-  const expandedTo = dateStr(endOffset + 14);
-
-  const { data } = await withCache(`tsdb:nextleague:${leagueId}`, 10 * 60, async () => {
-    // Retry with backoff for resilience (max 3 attempts for critical CL/FL1 endpoint)
-    const json = await retryWithBackoff(
-      async () => {
-        const result = await fetchJsonWithCurl(`${TSDB_BASE}/eventsnextleague.php?id=${leagueId}`, 5000);
-        // If no events returned, treat as transient error and trigger retry
-        if (!result || !result.events || result.events.length === 0) {
-          throw new Error('429-empty-response');
-        }
-        return result;
-      },
-      3, // More attempts for high-value endpoint
-      500
-    ).catch(() => ({}));
-    return (json.events ?? [])
-      .map(mapSportsDbMatch)
-      .filter((match: any) => match !== null && match !== undefined)
-      .map((match: any) => ({
-        ...match,
-        competition: {
-          ...(match.competition ?? {}),
-          code,
-          name: COMP_INFO[code]?.name ?? match.competition?.name ?? code,
-        },
-      }))
-      .filter((match: any) => {
-        const matchDate = String(match?.utcDate ?? '').slice(0, 10);
-        return matchDate && matchDate >= dateFrom && matchDate <= expandedTo;
-      })
-      .filter((match: any) => String(match?.status ?? 'SCHEDULED') !== 'FINISHED');
-  });
-
-  return data as any[];
-}
-
-async function fetchSportsDbCompetitionNextEventsFresh(code: string, startOffset: number, endOffset: number, type: 'today' | 'results') {
-  if (type !== 'today') return [];
-
-  const leagueId = TSDB_LEAGUE_ID_BY_CODE[code];
-  if (!leagueId) return [];
-
-  const dateFrom = dateStr(startOffset);
-  const expandedTo = dateStr(endOffset + 14);
-  const json = await fetchJsonWithCurl(`${TSDB_BASE}/eventsnextleague.php?id=${leagueId}`, 5000).catch(() => ({}));
-  const mapped = (json.events ?? [])
-    .map((event: any) => {
-      const match = mapSportsDbMatch(event);
-      return match;
-    })
-    .filter((match: any) => match !== null && match !== undefined)
-    .map((match: any) => ({
-      ...match,
-      competition: {
-        ...(match.competition ?? {}),
-        code,
-        name: COMP_INFO[code]?.name ?? match.competition?.name ?? code,
-      },
-    }))
-    .filter((match: any) => {
-      const matchDate = String(match?.utcDate ?? '').slice(0, 10);
-      return matchDate && matchDate >= dateFrom && matchDate <= expandedTo;
-    })
-    .filter((match: any) => String(match?.status ?? 'SCHEDULED') !== 'FINISHED');
-
-  return mapped;
+function getTodayDateStr(): string {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function mapLigue1OfficialMatch(match: any) {
   if (!match?.home?.clubIdentity || !match?.away?.clubIdentity) return null;
-
   const home = match.home.clubIdentity;
   const away = match.away.clubIdentity;
   const utcDate = match.date ?? null;
   if (!utcDate) return null;
-
-  const period = String(match.period ?? '').toLowerCase();
-  const status = match.isLive || period === 'live' || period === 'inprogress' || period === 'in_play'
-    ? 'IN_PLAY'
-    : period === 'finished' || period === 'postmatch' || period === 'final'
-      ? 'FINISHED'
-      : 'SCHEDULED';
-
   return {
-    id: match.matchId,
-    status,
+    id: `fl1:${match.id ?? utcDate}`,
+    status: 'SCHEDULED',
     utcDate,
     homeTeam: {
       id: String(home.shortId ?? home.id ?? home.clubId ?? home.name),
@@ -763,329 +96,57 @@ function mapLigue1OfficialMatch(match: any) {
       name: COMP_INFO.FL1.name,
       emblem: COMP_INFO.FL1.emblem,
     },
-    score: {
-      fullTime: {
-        home: typeof match.home?.score === 'number' ? match.home.score : null,
-        away: typeof match.away?.score === 'number' ? match.away.score : null,
-      },
-      halfTime: { home: null, away: null },
-    },
+    score: { fullTime: { home: null, away: null }, halfTime: { home: null, away: null } },
     liveDetails: null,
-    competitionName: 'Ligue 1 McDonald\'s',
-    leagueName: 'Ligue 1 McDonald\'s',
+    competitionName: "Ligue 1 McDonald's",
+    leagueName: "Ligue 1 McDonald's",
   };
 }
 
 async function fetchLigue1OfficialCalendarEvents(type: 'today' | 'results', startOffset: number, endOffset: number) {
-  if (type !== 'today') return [];
-
-  const dateKey = dateStr(startOffset);
+  // Official API only provides daily buckets; request a broader window and extract matching days
+  // official API enforces a max daysLimit of 14
+  const days = Math.max(1, Math.min(14, Math.abs(endOffset - startOffset) + 1));
   const json = await fetchJsonWithCurl(
-    `${L1_OFFICIAL_BASE}/matches?timezone=Europe%2FParis&daysLimit=1&lookAfter=true`,
-    5000
+    `${L1_OFFICIAL_BASE}/matches?timezone=Europe%2FParis&daysLimit=${days}&lookAfter=true`,
+    7000
   ).catch(() => ({}));
 
   const official = json?.results ?? json;
-  const dayBuckets = official?.byDate?.[dateKey];
-  if (dayBuckets) {
-    const debugMatchIds: string[] = [];
+  if (!official || !official.byDate || typeof official.byDate !== 'object') return [];
+
+  const matchIds = new Set<string>();
+  for (let d = startOffset; d <= endOffset; d++) {
+    const key = dateStr(d);
+    const dayBuckets = official.byDate?.[key];
+    if (!dayBuckets || typeof dayBuckets !== 'object') continue;
     for (const championshipBucket of Object.values(dayBuckets as Record<string, any>)) {
       for (const gameweekBucket of Object.values(championshipBucket as Record<string, any>)) {
         for (const id of (gameweekBucket as any)?.matchesIds ?? []) {
-          if (typeof id === 'string') debugMatchIds.push(id);
+          if (typeof id === 'string') matchIds.add(id);
         }
-      }
-    }
-    console.log(`[official-ligue1] ${dateKey}: ${debugMatchIds.length} matches`);
-  }
-  if (!dayBuckets || typeof dayBuckets !== 'object') return [];
-
-  const matchIds = new Set<string>();
-  for (const championshipBucket of Object.values(dayBuckets as Record<string, any>)) {
-    for (const gameweekBucket of Object.values(championshipBucket as Record<string, any>)) {
-      for (const id of (gameweekBucket as any)?.matchesIds ?? []) {
-        if (typeof id === 'string') matchIds.add(id);
       }
     }
   }
 
   const mapped = Array.from(matchIds)
-    .map((id) => mapLigue1OfficialMatch(official?.matches?.[id]))
+    .map((id) => {
+      const raw = official?.matches?.[id];
+      // Only include matches where both clubs belong to the French championship
+      const homeIsFrench = Boolean(raw?.home?.clubIdentity?.isInFrenchChampionship);
+      const awayIsFrench = Boolean(raw?.away?.clubIdentity?.isInFrenchChampionship);
+      if (!homeIsFrench || !awayIsFrench) return null;
+      return mapLigue1OfficialMatch(raw);
+    })
     .filter((match): match is NonNullable<ReturnType<typeof mapLigue1OfficialMatch>> => Boolean(match));
 
   return mapped.sort((a: any, b: any) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime());
 }
 
-function mapPulseliveMatch(match: any) {
-  if (!match) return null;
-
-  // kickoff timestamp may be in millis or ISO string
-  let utcDate: string | null = null;
-  if (match.kickoff) {
-    if (typeof match.kickoff === 'string') utcDate = match.kickoff;
-    else if (match.kickoff.label) utcDate = match.kickoff.label;
-    else if (match.kickoff.date) utcDate = match.kickoff.date;
-    else if (match.kickoff.millis) utcDate = new Date(Number(match.kickoff.millis)).toISOString();
-  }
-  utcDate = utcDate ?? match.utcDate ?? match.date ?? null;
-
-  const homeObj = match.homeTeam ?? match.home ?? match.home_team ?? match.homeSide ?? {};
-  const awayObj = match.awayTeam ?? match.away ?? match.away_team ?? match.awaySide ?? {};
-
-  const home = homeObj.team ?? homeObj.club ?? homeObj;
-  const away = awayObj.team ?? awayObj.club ?? awayObj;
-
-  const homeScore = match.score?.home ?? match.homeScore ?? (homeObj.score ?? null);
-  const awayScore = match.score?.away ?? match.awayScore ?? (awayObj.score ?? null);
-
-  // status mapping (best-effort)
-  const rawStatus = (match.matchStatus ?? match.status ?? match.gameState ?? '').toString().toLowerCase();
-  let status = 'SCHEDULED';
-  if (rawStatus.includes('in') || rawStatus.includes('live') || rawStatus.includes('playing')) status = 'IN_PLAY';
-  else if (rawStatus.includes('ft') || rawStatus.includes('finished') || rawStatus.includes('final')) status = 'FINISHED';
-  else if (rawStatus.includes('ht') || rawStatus.includes('half')) status = 'PAUSED';
-
-  return {
-    id: match.id ?? match.matchId ?? `${home?.id ?? home?.name}:${away?.id ?? away?.name}:${utcDate ?? Date.now()}`,
-    status,
-    utcDate,
-    homeTeam: {
-      id: String(home?.id ?? home?.teamId ?? home?.shortId ?? home?.name ?? '') || null,
-      name: home?.name ?? home?.teamName ?? homeObj?.name ?? 'Home',
-      shortName: home?.shortName ?? home?.name ?? homeObj?.shortName ?? homeObj?.name ?? 'Home',
-      crest: home?.crest ?? home?.logo ?? home?.badge ?? null,
-    },
-    awayTeam: {
-      id: String(away?.id ?? away?.teamId ?? away?.shortId ?? away?.name ?? '') || null,
-      name: away?.name ?? away?.teamName ?? awayObj?.name ?? 'Away',
-      shortName: away?.shortName ?? away?.name ?? awayObj?.shortName ?? awayObj?.name ?? 'Away',
-      crest: away?.crest ?? away?.logo ?? away?.badge ?? null,
-    },
-    competition: {
-      code: 'PL',
-      name: COMP_INFO.PL.name,
-      emblem: COMP_INFO.PL.emblem,
-    },
-    score: {
-      fullTime: {
-        home: typeof homeScore === 'number' ? homeScore : (homeScore == null ? null : Number(homeScore)),
-        away: typeof awayScore === 'number' ? awayScore : (awayScore == null ? null : Number(awayScore)),
-      },
-      halfTime: { home: null, away: null },
-    },
-    liveDetails: null,
-    competitionName: 'Premier League',
-    leagueName: 'Premier League',
-  };
-}
-
-async function fetchPulseliveCompetitionEvents(startOffset: number, endOffset: number, type: 'today' | 'results') {
-  if (type !== 'today') return [];
-
-  const from = dateStr(startOffset);
-  const to = dateStr(endOffset);
-
-  const url = `${PULSELIVE_BASE}/competitions/8/matches?fromDate=${from}&toDate=${to}`;
-  const json = await fetchJsonWithCurl(url, 5000).catch(() => ({}));
-  const payload = json?.content ?? json?.matches ?? json ?? {};
-
-  const items = Array.isArray(payload) ? payload : (payload?.content ?? payload?.matches ?? []);
-  const mapped = (items ?? []).map((m: any) => mapPulseliveMatch(m)).filter(Boolean);
-
-  return mapped.sort((a: any, b: any) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime());
-}
-
-function tryParseJsonLdSportsEvent(html: string) {
-  const scripts = Array.from(html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)).map((m) => m[1]);
-  for (const s of scripts) {
-    try {
-      const j = JSON.parse(s);
-      if (j && (j['@type'] === 'SportsEvent' || (Array.isArray(j['@type']) && j['@type'].includes('SportsEvent')))) {
-        return j;
-      }
-      // Some pages wrap objects in arrays
-      if (Array.isArray(j)) {
-        const found = j.find((x: any) => x && x['@type'] === 'SportsEvent');
-        if (found) return found;
-      }
-    } catch (e) {
-      // ignore parse errors
-    }
-  }
-  return null;
-}
-
-function extractIsoDatetime(html: string) {
-  const m = html.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:Z|[+\-][0-9:]+)?/);
-  return m ? m[0] : null;
-}
-
-function mapUefaMatchFromPage(html: string, slug: string, fallbackDate: string) {
-  try {
-    const jsonld = tryParseJsonLdSportsEvent(html);
-    if (jsonld) {
-      const start = jsonld.startDate ?? jsonld.datePublished ?? null;
-      const home = (jsonld.homeTeam && (jsonld.homeTeam.name || jsonld.homeTeam)) || null;
-      const away = (jsonld.awayTeam && (jsonld.awayTeam.name || jsonld.awayTeam)) || null;
-      const utc = start ?? extractIsoDatetime(html) ?? `${fallbackDate}T00:00:00Z`;
-      return {
-        id: `uefa:${slug}`,
-        status: 'SCHEDULED',
-        utcDate: utc,
-        homeTeam: { id: null, name: String(home ?? 'Home') },
-        awayTeam: { id: null, name: String(away ?? 'Away') },
-        competition: { code: 'CL', name: COMP_INFO.CL?.name ?? 'Champions League', emblem: COMP_INFO.CL?.emblem ?? null },
-      };
-    }
-
-    // Fallback: try meta title or og:title
-    const titleMatch = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) || html.match(/<title>([^<]+)<\/title>/i);
-    const title = titleMatch ? titleMatch[1] : null;
-    let home = 'Home';
-    let away = 'Away';
-    if (title) {
-      const parts = title.split(/\s+v[sS]?\s+|\s+vs\s+|\s+-\s+/i);
-      if (parts.length >= 2) {
-        home = parts[0].trim();
-        away = parts[1].trim();
-      } else if (title.includes('-')) {
-        const p = title.split('-'); home = p[0].trim(); away = p[1].trim();
-      }
-    }
-    const iso = extractIsoDatetime(html) || `${fallbackDate}T00:00:00Z`;
-    return {
-      id: `uefa:${slug}`,
-      status: 'SCHEDULED',
-      utcDate: iso,
-      homeTeam: { id: null, name: home },
-      awayTeam: { id: null, name: away },
-      competition: { code: 'CL', name: COMP_INFO.CL?.name ?? 'Champions League', emblem: COMP_INFO.CL?.emblem ?? null },
-    };
-  } catch (e) {
-    return null;
-  }
-}
 
 
-async function fetchSportsDbWindow(startOffset: number, endOffset: number) {
-  const dates: string[] = [];
-  // Expand date range to catch more events (especially for under-covered leagues like FL1, CL)
-  const expandedStart = Math.min(startOffset, -14);
-  const expandedEnd = Math.max(endOffset, 21);
-  for (let offset = expandedStart; offset <= expandedEnd; offset += 1) {
-    dates.push(dateStr(offset));
-  }
 
-  const pages = await Promise.all(dates.map((date) => fetchSportsDbEventsForDate(date)));
-  return pages.flat();
-}
 
-function mapOpenLigaDbMatch(match: any, competitionCode: string) {
-  const isFinished = match.MatchIsFinished ?? match.matchIsFinished ?? false;
-  const utc = match.MatchDateTimeUTC ?? match.matchDateTimeUTC ?? match.matchDateTime ?? dateStr();
-  const status = isFinished ? 'FINISHED' : (utc && new Date(utc) < new Date() ? 'FINISHED' : 'SCHEDULED');
-
-  const homeGoals = match.MatchResults?.find((r: any) => r.ResultOrderID === 2)?.PointsTeam1 ?? null;
-  const awayGoals = match.MatchResults?.find((r: any) => r.ResultOrderID === 2)?.PointsTeam2 ?? null;
-
-  const home = match.Team1 ?? match.team1 ?? {};
-  const away = match.Team2 ?? match.team2 ?? {};
-
-  return {
-    id: match.MatchID ?? match.matchID ?? `ol:${competitionCode}:${utc}`,
-    status,
-    utcDate: utc,
-    homeTeam: {
-      id: home.TeamId ?? home.teamId ?? null,
-      name: home.TeamName ?? home.teamName ?? 'Home',
-      shortName: home.TeamName ?? home.teamName ?? 'Home',
-      crest: home.TeamIconUrl ?? home.teamIconUrl ?? null,
-    },
-    awayTeam: {
-      id: away.TeamId ?? away.teamId ?? null,
-      name: away.TeamName ?? away.teamName ?? 'Away',
-      shortName: away.TeamName ?? away.teamName ?? 'Away',
-      crest: away.TeamIconUrl ?? away.teamIconUrl ?? null,
-    },
-    competition: {
-      code: competitionCode,
-      name: COMP_INFO[competitionCode]?.name ?? competitionCode,
-      emblem: null,
-    },
-    score: {
-      fullTime: { home: homeGoals ?? null, away: awayGoals ?? null },
-      halfTime: { home: null, away: null },
-    },
-    competitionName: COMP_INFO[competitionCode]?.name ?? competitionCode,
-    leagueName: COMP_INFO[competitionCode]?.name ?? competitionCode,
-  };
-}
-
-async function fetchOpenLigaDbCompetitionEvents(code: string, startOffset: number, endOffset: number, type: 'today' | 'results') {
-  const olCode = OL_LEAGUE_BY_CODE[code];
-  if (!olCode) return [];
-
-  const cacheKey = `football:ol:${code}:${startOffset}:${endOffset}:${type}`;
-  const { data } = await withCache(cacheKey, type === 'today' ? CACHE_TTL.football_today : CACHE_TTL.football_results, async () => {
-    let dateFrom = dateStr(startOffset);
-    let dateTo = dateStr(endOffset);
-
-    try {
-      const seasons = [new Date().getFullYear(), new Date().getFullYear() + 1, new Date().getFullYear() - 1];
-      const candidates: string[] = [];
-      candidates.push(`${OL_BASE}/getmatchdata/${olCode}`);
-      for (const s of seasons) {
-        candidates.push(`${OL_BASE}/getmatchdata/${olCode}/${s}`);
-        candidates.push(`${OL_BASE}/getmatchesbyleagueandseason?leagueShortcut=${olCode}&season=${s}`);
-      }
-
-      for (const url of candidates) {
-        const json = await fetchJsonWithTimeout(url, {}, 3500).catch(() => null);
-        if (!json || !Array.isArray(json) || !json.length) continue;
-
-        let filtered = (json ?? [])
-          .filter((m: any) => {
-            const matchDate = (m.MatchDateTimeUTC ?? m.matchDateTimeUTC ?? m.matchDateTime ?? '').slice(0, 10);
-            return matchDate && matchDate >= dateFrom && matchDate <= dateTo;
-          });
-
-            const nextEvents = await fetchSportsDbCompetitionNextEvents(code, startOffset, endOffset, type);
-            if (nextEvents && nextEvents.length) {
-              recordSourceAttempt('thesportsdb', true);
-              return nextEvents;
-            }
-
-        // If empty for this week, expand search to 3 weeks ahead
-        if (!filtered.length && type === 'today') {
-          const expandedTo = dateStr(endOffset + 14);
-          filtered = (json ?? [])
-            .filter((m: any) => {
-              const matchDate = (m.MatchDateTimeUTC ?? m.matchDateTimeUTC ?? m.matchDateTime ?? '').slice(0, 10);
-              return matchDate && matchDate >= dateFrom && matchDate <= expandedTo;
-            })
-            .slice(0, 10); // Limit to first 10 matches in expanded window
-        }
-
-        if (filtered.length) {
-          filtered = filtered
-            .filter((m: any) => {
-              const matchStatus = (m.MatchIsFinished ?? m.matchIsFinished) ? 'FINISHED' : 'SCHEDULED';
-              return type === 'today' ? !['FINISHED'].includes(matchStatus) : matchStatus === 'FINISHED';
-            })
-            .map((m: any) => mapOpenLigaDbMatch(m, code));
-
-          if (filtered.length) return filtered;
-        }
-      }
-      return [];
-    } catch (error) {
-      console.warn(`OpenLigaDB ${code} fetch error`, (error as any)?.message ?? error);
-      return [];
-    }
-  });
-
-  return data as any[];
-}
 
 function dedupeEvents(events: any[]) {
   const seen = new Map<string, any>();
@@ -1122,61 +183,35 @@ function dedupeEvents(events: any[]) {
 }
 
 async function fetchFootballDataCompetitionEvents(code: string, startOffset: number, endOffset: number, type: 'today' | 'results') {
-  if (!process.env.FOOTBALL_API_KEY) return [];
-
-  const cacheKey = `football:fd:${code}:${startOffset}:${endOffset}:${type}`;
-  const { data } = await withCache(cacheKey, type === 'today' ? CACHE_TTL.football_today : CACHE_TTL.football_results, async () => {
-    const dateFrom = dateStr(startOffset);
-    const dateTo = dateStr(endOffset);
-    const statusSuffix = type === 'results' ? '&status=FINISHED' : '';
-
-    const json = await fetchJsonWithTimeout(
-      `${FD_BASE}/competitions/${code}/matches?dateFrom=${dateFrom}&dateTo=${dateTo}${statusSuffix}`,
-      { headers: fdHeaders() },
-      3500
-    );
-
-    return (json.matches ?? [])
-      .filter((m: any) => COMPETITIONS.includes(m.competition?.code))
-      .filter((m: any) => type === 'today' ? !['FINISHED', 'CANCELLED', 'POSTPONED'].includes(m.status) : true)
-      .map((m: any) => enrichMatch(m));
-  });
-
-  return data as any[];
+  return FFD.fetchFootballDataCompetitionEvents(code, startOffset, endOffset, type, COMPETITIONS, AF_LEAGUE_BY_CODE);
 }
 
 async function fetchApiFootballCompetitionEvents(code: string, leagueId: number, startOffset: number, endOffset: number, type: 'today' | 'results') {
-  const apiKey = process.env.RAPIDAPI_KEY ?? process.env.API_FOOTBALL_KEY;
-  if (!apiKey) return [];
-
-  const cacheKey = `football:af:${code}:${startOffset}:${endOffset}:${type}`;
-  const { data } = await withCache(cacheKey, type === 'today' ? CACHE_TTL.football_today : CACHE_TTL.football_results, async () => {
-    const dateFrom = dateStr(startOffset);
-    const dateTo = dateStr(endOffset);
-
-    const json = await fetchJsonWithTimeout(
-      `${AF_BASE}/fixtures?league=${leagueId}&season=2025&from=${dateFrom}&to=${dateTo}`,
-      { headers: afHeaders() },
-      3500
-    );
-
-    return (json.response ?? [])
-      .filter((m: any) => {
-        const status = mapApiFootballStatus(m.fixture?.status?.short);
-        return type === 'today' ? !['FINISHED', 'CANCELLED', 'POSTPONED'].includes(status) : status === 'FINISHED';
-      })
-      .map((m: any) => enrichMatch(mapApiFootballMatch(m)));
-  });
-
-  return data as any[];
+  return FFD.fetchApiFootballCompetitionEvents(code, leagueId, startOffset, endOffset, type, AF_LEAGUE_BY_CODE);
 }
 
 async function fetchFootballEventsWindow(type: 'today' | 'results', startOffset: number, endOffset: number) {
-  const perCompetition = await Promise.all(COMPETITIONS.map(async (code) => fetchCompetitionEventsByPriority(code, startOffset, endOffset, type)));
+  const perCompetition = await Promise.all(COMPETITIONS.map(async (code) => {
+    // Prefer Pulselive for Premier League to reduce other API calls
+    if (code === 'PL') {
+      try {
+        await throttleFor('pulselive');
+        const pulse = await fetchPulseliveCompetitionEvents(startOffset, endOffset, type).catch(() => []);
+        if (pulse && pulse.length) {
+          try { recordSourceAttempt('pulselive', true); } catch {}
+          return pulse;
+        }
+        try { recordSourceAttempt('pulselive', false); } catch {}
+      } catch (e) {
+        try { recordSourceAttempt('pulselive', false); } catch {}
+      }
+    }
+    return fetchCompetitionEventsByPriority(code, startOffset, endOffset, type);
+  }));
   // per-competition sizes (diagnostic removed)
 
   const footballDataEvents = perCompetition.flat();
-  const fallback = await fetchSportsDbWindow(startOffset, endOffset);
+  const fallback = await fetchSportsDbWindow(startOffset, endOffset, COMP_INFO);
 
   const merged = dedupeEvents([...footballDataEvents, ...fallback]);
 
@@ -1192,8 +227,8 @@ async function fetchFootballEventsWindow(type: 'today' | 'results', startOffset:
           if (officialEvents?.length) return officialEvents;
         }
         const networkEvents = type === 'today'
-          ? await fetchSportsDbCompetitionNextEvents(code, startOffset, endOffset, type)
-          : await fetchSportsDbCompetitionSeasonEvents(code, startOffset, endOffset, type);
+          ? await fetchSportsDbCompetitionNextEvents(code, startOffset, endOffset, type, COMP_INFO)
+          : await fetchSportsDbCompetitionSeasonEvents(code, startOffset, endOffset, type, COMP_INFO);
         if (networkEvents?.length) return networkEvents;
         return getArchivedCompetitionEvents(code, type);
       } catch {
@@ -1210,6 +245,55 @@ async function fetchFootballEventsWindow(type: 'today' | 'results', startOffset:
   return filtered.sort((a: any, b: any) => type === 'today'
     ? new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime()
     : new Date(b.utcDate).getTime() - new Date(a.utcDate).getTime());
+}
+
+async function fetchCompetitionEventsByPriority(code: string, startOffset: number, endOffset: number, type: 'today' | 'results') {
+  const sources = COMP_SOURCES[code] ?? ['football-data', 'thesportsdb', 'api-football'];
+  for (const s of sources) {
+    try {
+      await throttleFor(s);
+      let res: any[] = [];
+      switch (s) {
+        case 'pulselive':
+          res = await fetchPulseliveCompetitionEvents(startOffset, endOffset, type).catch(() => []);
+          break;
+        case 'football-data':
+          res = await fetchFootballDataCompetitionEvents(code, startOffset, endOffset, type).catch(() => []);
+          break;
+        case 'api-football':
+          res = await fetchApiFootballCompetitionEvents(code, AF_LEAGUE_BY_CODE[code] ?? 0, startOffset, endOffset, type).catch(() => []);
+          break;
+        case 'thesportsdb':
+          res = await fetchSportsDbCompetitionNextEvents(code, startOffset, endOffset, type, COMP_INFO).catch(() => []);
+          break;
+        case 'openligadb':
+          res = await fetchOpenLigaDbCompetitionEvents(code, startOffset, endOffset, type, COMP_INFO).catch(() => []);
+          break;
+        case 'official-ligue1':
+          res = await fetchLigue1OfficialCalendarEvents(type, startOffset, endOffset).catch(() => []);
+          break;
+        default:
+          res = [];
+      }
+      if (res && res.length) {
+        try { recordSourceAttempt(s, true); } catch {}
+        return res;
+      }
+      try { recordSourceAttempt(s, false); } catch {}
+    } catch (e) {
+      try { recordSourceAttempt(s, false); } catch {}
+    }
+  }
+
+  // final fallback: sportsdb
+  try {
+    const fallback = type === 'today'
+      ? await fetchSportsDbCompetitionNextEvents(code, startOffset, endOffset, type, COMP_INFO)
+      : await fetchSportsDbCompetitionSeasonEvents(code, startOffset, endOffset, type, COMP_INFO);
+    return fallback || [];
+  } catch {
+    return [];
+  }
 }
 
 function nextSunday2359DelayMs(now = new Date()) {
@@ -1385,6 +469,17 @@ function startFrequentClPrefetch(timesPerDay = 4) {
         }
       }
 
+      // 4b. Also include scheduled/upcoming CL matches (lookahead) so finals aren't missed before kickoff
+      try {
+        const upcoming = await fetchCompetitionEventsByPriority('CL', -7, 28, 'today').catch(() => []);
+        if (upcoming && upcoming.length) {
+          clResults.push(...upcoming);
+          console.log(`[CL Prefetch] Upcoming: ${upcoming.length} scheduled CL matches included`);
+        }
+      } catch (e) {
+        // ignore
+      }
+
       // Store scores in local database (cumulative, never deleted)
       for (const match of clResults) {
         if (match.score?.fullTime?.home !== null && match.score?.fullTime?.away !== null) {
@@ -1420,53 +515,50 @@ function startFrequentClPrefetch(timesPerDay = 4) {
   setInterval(() => void runOnce(), ms);
 }
 
-const TSDB_LOOK_AHEAD_MIN_MATCHES = 4;
-const TSDB_LOOK_AHEAD_EXTENSION_DAYS = 7;
-const TSDB_LOOK_AHEAD_MAX_CODES_PER_RUN = 4;
-let lastSparseTsdbLookAheadDate = '';
+// One-time attempt to fetch Europa / Conference results (useful to populate finals)
+async function startOneTimeEuropaPrefetch() {
+  try {
+    const [uelResults, uelToday, ueclResults, ueclToday] = await Promise.all([
+      fetchCompetitionEventsByPriority('UEL', -365, 0, 'results').catch(() => []),
+      fetchCompetitionEventsByPriority('UEL', -7, 28, 'today').catch(() => []),
+      fetchCompetitionEventsByPriority('UECL', -365, 0, 'results').catch(() => []),
+      fetchCompetitionEventsByPriority('UECL', -7, 28, 'today').catch(() => []),
+    ]);
+    const candidates = dedupeEvents([...uelResults, ...uelToday, ...ueclResults, ...ueclToday].map((event) => normalizeEventCompetition(event, COMP_INFO)));
 
-async function fetchSportsDbCompetitionNextEventsStrict(code: string, startOffset: number, endOffset: number, type: 'today' | 'results') {
-  if (type !== 'today') return [];
+    // Store scored matches in local DB
+    for (const match of candidates) {
+      if (match.score?.fullTime?.home !== null && match.score?.fullTime?.away !== null) {
+        storeScore(
+          match.homeTeam?.name ?? 'Home',
+          match.awayTeam?.name ?? 'Away',
+          match.competition?.code ?? 'UEL',
+          match.utcDate ?? new Date().toISOString(),
+          match.score.fullTime.home,
+          match.score.fullTime.away,
+          match.source ?? 'api'
+        );
+      }
+    }
 
-  const leagueId = TSDB_LEAGUE_ID_BY_CODE[code];
-  if (!leagueId) return [];
-
-  const dateFrom = dateStr(startOffset);
-  const dateTo = dateStr(endOffset);
-
-  const { data } = await withCache(`tsdb:nextleague:strict:${leagueId}:${dateFrom}:${dateTo}`, 12 * 60 * 60, async () => {
-    const json = await retryWithBackoff(
-      async () => {
-        const result = await fetchJsonWithCurl(`${TSDB_BASE}/eventsnextleague.php?id=${leagueId}`, 5000);
-        if (!result || !result.events || result.events.length === 0) {
-          throw new Error('429-empty-response');
-        }
-        return result;
-      },
-      3,
-      500
-    ).catch(() => ({}));
-
-    return (json.events ?? [])
-      .map(mapSportsDbMatch)
-      .filter((match: any) => match !== null && match !== undefined)
-      .map((match: any) => ({
-        ...match,
-        competition: {
-          ...(match.competition ?? {}),
-          code,
-          name: COMP_INFO[code]?.name ?? match.competition?.name ?? code,
-        },
-      }))
-      .filter((match: any) => {
-        const matchDate = String(match?.utcDate ?? '').slice(0, 10);
-        return matchDate && matchDate >= dateFrom && matchDate <= dateTo;
-      })
-      .filter((match: any) => String(match?.status ?? 'SCHEDULED') !== 'FINISHED');
-  });
-
-  return data as any[];
+    const existing = readArchiveMerged('results') || { events: [] };
+    const allResults = dedupeEvents([...(candidates ?? []), ...(existing.events ?? [])]);
+    if (allResults.length) {
+      writeArchiveSnapshot('results', { events: allResults, fetchedAt: Date.now() });
+      console.log(`[Europa Prefetch] ✓ Archived ${allResults.length} total matches (UEL/UECL mixed)`);
+    }
+  } catch (e) {
+    console.warn('[Europa Prefetch] Error', (e as any)?.message ?? e);
+  }
 }
+
+// Run once on startup to help populate continental finals if available
+void startOneTimeEuropaPrefetch();
+
+const TSDB_LOOK_AHEAD_MIN_MATCHES = 6;
+const TSDB_LOOK_AHEAD_EXTENSION_DAYS = 30;
+const TSDB_LOOK_AHEAD_MAX_CODES_PER_RUN = 6;
+let lastSparseTsdbLookAheadDate = '';
 
 async function runSparseTsdbLookAheadPrefetch(label = 'TSDB Prefetch') {
   const todayKey = getTodayDateStr();
@@ -1495,7 +587,7 @@ async function runSparseTsdbLookAheadPrefetch(label = 'TSDB Prefetch') {
   let merged = [...currentEvents];
   for (const { code } of candidates) {
     try {
-      const extendedEvents = await fetchSportsDbCompetitionNextEventsStrict(code, 0, TSDB_LOOK_AHEAD_EXTENSION_DAYS, 'today');
+      const extendedEvents = await fetchSportsDbCompetitionNextEventsStrict(code, 0, TSDB_LOOK_AHEAD_EXTENSION_DAYS, 'today', COMP_INFO);
 
       if (!extendedEvents?.length) continue;
 
@@ -1534,228 +626,19 @@ function normalizeName(value = '') {
     .replace(/[^a-z0-9]/g, '');
 }
 
-function sameDay(a?: string, b?: string) {
-  if (!a || !b) return false;
-  return a.slice(0, 10) === b.slice(0, 10);
+function detectCompetitionCodeFromText(text = ''): string | null {
+  const k = normalizeName(String(text ?? ''));
+  if (!k) return null;
+  if (k.includes('europaleague') || k.includes('uefaeuropaleague') || k.includes('uel') || k.includes('europa')) return 'UEL';
+  if (k.includes('conferenceleague') || k.includes('uefaeuropaconferenceleague') || k.includes('uecl') || k.includes('conference')) return 'UECL';
+  if (k.includes('championsleague') || k.includes('liguedeschampions') || k.includes('ucl') || k.includes('champions')) return 'CL';
+  return null;
 }
 
-function outcomePrice(outcomes: any[], teamName: string) {
-  const target = normalizeName(teamName);
-  return outcomes.find((o: any) => {
-    const name = normalizeName(o.name);
-    return name === target || name.includes(target) || target.includes(name);
-  })?.price ?? null;
-}
-
-function normalizeOddsEvent(event: any) {
-  const bookmaker =
-    event.bookmakers?.find((b: any) => b.key === 'betclic') ??
-    event.bookmakers?.find((b: any) => b.key === 'pinnacle') ??
-    event.bookmakers?.find((b: any) => b.key === 'betfair_ex_uk') ??
-    event.bookmakers?.[0];
-  const market = bookmaker?.markets?.find((m: any) => m.key === 'h2h');
-  const outcomes = market?.outcomes ?? [];
-
-  return {
-    home: event.home_team,
-    away: event.away_team,
-    commenceTime: event.commence_time,
-    bookmaker: bookmaker?.title ?? null,
-    lastUpdate: market?.last_update ?? bookmaker?.last_update ?? null,
-    prices: {
-      home: outcomePrice(outcomes, event.home_team),
-      draw: outcomes.find((o: any) => normalizeName(o.name) === 'draw')?.price ?? null,
-      away: outcomePrice(outcomes, event.away_team),
-    },
-  };
-}
-
-async function getOddsByCompetition(codes: string[]) {
-  const apiKey = process.env.THE_ODDS_API_KEY ?? process.env.ODDS_API_KEY;
-  if (!apiKey) return {};
-
-  const uniqueCodes = Array.from(new Set(codes.filter((code) => ODDS_SPORT_KEYS[code])));
-
-  const entries = await Promise.all(uniqueCodes.map(async (code) => {
-    const sport = ODDS_SPORT_KEYS[code];
-    const cacheKey = `odds:${sport}`;
-
-    const { data } = await withCache(cacheKey, 24 * 60 * 60, async () => {
-      const url = `${ODDS_BASE}/sports/${sport}/odds?regions=eu,uk&markets=h2h&oddsFormat=decimal&apiKey=${apiKey}`;
-      const res = await fetch(url).catch(() => null);
-      if (!res || !res.ok) {
-        console.warn(`Odds ${sport} ${res ? res.status : 'no-response'}`);
-        return [];
-      }
-
-      const json = await res.json().catch(() => []);
-      const normalizedEvents = (json ?? []).map((ev: any) => {
-        const commenceTime = ev.commence_time ?? ev.commenceTime ?? ev.commence_time;
-        const bookmakers = Array.isArray(ev.bookmakers) ? ev.bookmakers : [];
-
-        const bookProbs: Array<{ home?: number; draw?: number; away?: number; lastUpdate?: string; bookmaker?: string }> = [];
-        for (const b of bookmakers) {
-          const market = Array.isArray(b.markets) ? b.markets.find((m: any) => m.key === 'h2h') : null;
-          const outcomes = market?.outcomes ?? [];
-          const homeOdd = outcomes.find((o: any) => normalizeName(o.name) === normalizeName(ev.home_team ?? ev.home))?.price ?? outcomes[0]?.price ?? null;
-          const awayOdd = outcomes.find((o: any) => normalizeName(o.name) === normalizeName(ev.away_team ?? ev.away))?.price ?? outcomes[1]?.price ?? null;
-          const drawOdd = outcomes.find((o: any) => normalizeName(o.name) === 'draw')?.price ?? outcomes.find((o: any) => normalizeName(o.name).includes('draw'))?.price ?? null;
-
-          if (homeOdd || awayOdd || drawOdd) {
-            const pHome = homeOdd ? 1 / Number(homeOdd) : 0;
-            const pDraw = drawOdd ? 1 / Number(drawOdd) : 0;
-            const pAway = awayOdd ? 1 / Number(awayOdd) : 0;
-            const s = pHome + pDraw + pAway;
-            if (s > 0) {
-              bookProbs.push({
-                home: pHome / s,
-                draw: pDraw / s,
-                away: pAway / s,
-                lastUpdate: market?.last_update ?? b?.last_update ?? null,
-                bookmaker: b?.title ?? b?.key ?? null,
-              });
-            }
-          }
-        }
-
-        if (!bookProbs.length) return null;
-
-        const sum = bookProbs.reduce((acc: { home: number; draw: number; away: number }, p) => {
-          acc.home += p.home ?? 0;
-          acc.draw += p.draw ?? 0;
-          acc.away += p.away ?? 0;
-          return acc;
-        }, { home: 0, draw: 0, away: 0 });
-
-        const avg = {
-          home: sum.home / bookProbs.length,
-          draw: sum.draw / bookProbs.length,
-          away: sum.away / bookProbs.length,
-          lastUpdate: bookProbs[0]?.lastUpdate ?? null,
-        };
-
-        const prices: any = {};
-        if (avg.home && avg.home > 0) prices.home = +(1 / avg.home).toFixed(3);
-        if (avg.draw && avg.draw > 0) prices.draw = +(1 / avg.draw).toFixed(3);
-        if (avg.away && avg.away > 0) prices.away = +(1 / avg.away).toFixed(3);
-
-        return {
-          home: ev.home_team ?? ev.home ?? ev.teams?.home ?? null,
-          away: ev.away_team ?? ev.away ?? ev.teams?.away ?? null,
-          commenceTime,
-          lastUpdate: avg.lastUpdate ?? null,
-          prices,
-          source: 'the-odds-api-aggregated',
-        };
-      }).filter(Boolean);
-
-      return normalizedEvents;
-    });
-
-    return [code, data ?? []] as const;
-  }));
-
-  return Object.fromEntries(entries);
-}
-
-function findOddsForMatch(match: any, oddsByCompetition: Record<string, any[]>) {
-  const events = oddsByCompetition[match.competition?.code] ?? [];
-  const home = normalizeName(match.homeTeam?.name ?? match.homeTeam?.shortName ?? '');
-  const away = normalizeName(match.awayTeam?.name ?? match.awayTeam?.shortName ?? '');
-
-  return events.find((event) => {
-    const eventHome = normalizeName(event.home);
-    const eventAway = normalizeName(event.away);
-    const namesMatch =
-      (eventHome.includes(home) || home.includes(eventHome)) &&
-      (eventAway.includes(away) || away.includes(eventAway));
-    return namesMatch && sameDay(event.commenceTime, match.utcDate);
-  }) ?? null;
-}
-
-function enrichMatch(m: any, oddsByCompetition: Record<string, any[]> = {}) {
-  const publicOdds = findOddsForMatch(m, oddsByCompetition);
-  return {
-    ...m,
-    competitionName: COMP_INFO[m.competition?.code]?.name ?? m.competition?.name ?? '',
-    leagueName: COMP_INFO[m.competition?.code]?.name ?? m.competition?.name ?? '',
-    publicOdds,
-  };
-}
-
-function mapApiFootballStatus(short?: string) {
-  const status = String(short ?? '').toUpperCase();
-  if (['HT', 'PAUSE', 'BREAK'].includes(status)) return 'PAUSED';
-  if (['1H', '2H', 'ET', 'BT', 'LIVE'].includes(status)) return 'IN_PLAY';
-  if (['FT', 'AET', 'PEN'].includes(status)) return 'FINISHED';
-  return 'IN_PLAY';
-}
-
-function mapApiFootballMatch(item: any) {
-  const leagueId = item?.league?.id;
-  const competitionCode = Object.entries(AF_LEAGUE_BY_CODE).find(([, id]) => id === leagueId)?.[0] ?? String(leagueId ?? 'AF');
-  return {
-    id: item?.fixture?.id ?? `${competitionCode}:${item?.fixture?.timestamp ?? Date.now()}`,
-    status: mapApiFootballStatus(item?.fixture?.status?.short),
-    utcDate: item?.fixture?.date ?? new Date((item?.fixture?.timestamp ?? Date.now()) * 1000).toISOString(),
-    homeTeam: {
-      id: item?.teams?.home?.id ?? null,
-      name: item?.teams?.home?.name ?? 'Home',
-      shortName: item?.teams?.home?.name ?? 'Home',
-      crest: item?.teams?.home?.logo ?? null,
-    },
-    awayTeam: {
-      id: item?.teams?.away?.id ?? null,
-      name: item?.teams?.away?.name ?? 'Away',
-      shortName: item?.teams?.away?.name ?? 'Away',
-      crest: item?.teams?.away?.logo ?? null,
-    },
-    competition: {
-      code: competitionCode,
-      name: item?.league?.name ?? competitionCode,
-      emblem: item?.league?.logo ?? null,
-    },
-    score: {
-      fullTime: {
-        home: item?.goals?.home ?? null,
-        away: item?.goals?.away ?? null,
-      },
-      halfTime: {
-        home: item?.score?.halftime?.home ?? null,
-        away: item?.score?.halftime?.away ?? null,
-      },
-    },
-    liveDetails: {
-      minute: item?.fixture?.status?.elapsed ?? null,
-      source: 'api-football',
-      score: {
-        home: item?.goals?.home ?? null,
-        away: item?.goals?.away ?? null,
-      },
-    },
-  };
-}
-
-async function fetchApiFootballLiveMatches() {
-  const apiKey = process.env.RAPIDAPI_KEY ?? process.env.API_FOOTBALL_KEY;
-  if (!apiKey) return [];
-
-  const res = await fetch(`${AF_BASE}/fixtures?live=all`, { headers: afHeaders() }).catch(() => null);
-  if (!res || !res.ok) return [];
-  const json = await res.json().catch(() => null);
-  const fixtures = json?.response ?? [];
-
-  return fixtures.map(mapApiFootballMatch).filter((match: any) => ['IN_PLAY', 'PAUSED'].includes(match.status));
-}
+// Football-Data / API-Football helpers moved to lib/footballFootballData
 
 async function fetchMatchesForStatus(status: 'IN_PLAY' | 'PAUSED' | 'SUSPENDED') {
-  const res = await fetch(`${FD_BASE}/matches?status=${status}`, { headers: fdHeaders() });
-  if (!res.ok) {
-    const txt = await res.text().catch(() => '');
-    throw new Error(`FD live ${status} ${res.status}${txt ? `: ${txt}` : ''}`);
-  }
-  const json = await res.json();
-  return json.matches ?? [];
+  return FFD.fetchMatchesForStatus(status);
 }
 
 function readLastLiveSnapshot() {
@@ -1763,6 +646,7 @@ function readLastLiveSnapshot() {
 }
 
 function writeLastLiveSnapshot(payload: any) {
+  if (payload?.matches) payload.matches = sanitizeEvents(payload.matches || []);
   writeArchiveSnapshot('live', payload);
 }
 
@@ -1771,7 +655,33 @@ function readLastTodaySnapshot() {
 }
 
 function writeLastTodaySnapshot(payload: any) {
+  if (payload?.events) payload.events = sanitizeEvents(payload.events || []);
   writeArchiveSnapshot('today', payload);
+}
+
+async function sanitizeTodayFL1Events(events: any[]) {
+  if (!Array.isArray(events) || events.length === 0) return events;
+  const fl1Events = events.filter((e: any) => e?.competition?.code === 'FL1');
+  if (fl1Events.length === 0) return events;
+
+  try {
+    const seasonMatches = await fetchSportsDbCompetitionSeasonEvents('FL1', -7, 21, 'today', COMP_INFO).catch(() => []);
+    const frenchTeams = new Set((seasonMatches ?? []).flatMap((m: any) => [normalizeName(String(m.homeTeam?.name ?? '')), normalizeName(String(m.awayTeam?.name ?? ''))]));
+
+    const filtered = events.filter((e: any) => {
+      if (e?.competition?.code !== 'FL1') return true;
+      const h = normalizeName(String(e.homeTeam?.name ?? ''));
+      const a = normalizeName(String(e.awayTeam?.name ?? ''));
+      // keep only if both teams are known French teams from season list
+      return frenchTeams.has(h) && frenchTeams.has(a);
+    });
+
+    const removed = events.length - filtered.length;
+    if (removed > 0) console.log(`[Sanitize] Removed ${removed} non-FL1 events from today snapshot`);
+    return filtered;
+  } catch (e) {
+    return events;
+  }
 }
 
 function snapshotCoverageStats(events: any[] = []) {
@@ -1800,11 +710,12 @@ function shouldPersistTodaySnapshot(currentEvents: any[] | undefined, nextEvents
   return false;
 }
 
-function readLastResultsSnapshot() {
+export function readLastResultsSnapshot() {
   return readArchiveMerged('results');
 }
 
-function writeLastResultsSnapshot(payload: any) {
+export function writeLastResultsSnapshot(payload: any) {
+  if (payload?.events) payload.events = sanitizeEvents(payload.events || []);
   writeArchiveSnapshot('results', payload);
 }
 
@@ -1813,7 +724,7 @@ function getArchivedCompetitionEvents(code: string, type: 'today' | 'results') {
   return (snapshot?.events ?? []).filter((event: any) => event?.competition?.code === code);
 }
 
-function mergeResultsSnapshot(events: any[]) {
+export function mergeResultsSnapshot(events: any[]) {
   const existing = readLastResultsSnapshot();
   const merged = dedupeEvents([...(events ?? []), ...(existing?.events ?? [])]).map((event: any) => {
     const match = (existing?.events ?? []).find((e: any) => e?.id === event?.id && e?.competition?.code === event?.competition?.code);
@@ -1831,6 +742,110 @@ function mergeResultsSnapshot(events: any[]) {
     return Number.isFinite(t) && t >= cutoff;
   });
   return recent;
+}
+
+export async function runImmediateResultsPrefetch() {
+  try {
+    const resultsEvents = await fetchFootballEventsWindow('results', -21, 0);
+    const mergedResults = mergeResultsSnapshot(resultsEvents);
+    writeLastResultsSnapshot({ events: mergedResults, fetchedAt: Date.now() });
+    const compsList = COMPETITIONS.map((code) => ({ code, name: COMP_INFO[code]?.name ?? code, emblem: COMP_INFO[code]?.emblem ?? null, count: mergedResults.filter((e: any) => e.competition?.code === code).length }));
+    return { count: mergedResults.length, competitions: compsList, fetchedAt: Date.now() };
+  } catch (e) {
+    throw e;
+  }
+}
+
+export async function runTargetedCompetitionPrefetch(code: string, startOffset = -7, endOffset = 0, debug = false) {
+  try {
+    // 1) Try archived snapshot for this competition
+    let events: any[] = getArchivedCompetitionEvents(code, 'results') || [];
+    // 2) If archive empty, try TSDB seasonal fetch
+    if (!events || events.length === 0) {
+      try {
+        const tsdb = await fetchSportsDbCompetitionSeasonEvents(code, startOffset, endOffset, 'results', COMP_INFO).catch(() => []);
+        if (tsdb && tsdb.length) events = tsdb;
+      } catch {
+        // ignore
+      }
+    }
+    // 3) If still empty, try competition-priority fetch
+    if (!events || events.length === 0) {
+      events = await fetchCompetitionEventsByPriority(code, startOffset, endOffset, 'results').catch(() => []);
+    }
+    // 4) Try Sofascore finished matches for Ligue 1 specifically
+    const SOFASCORE_ALLOW_RESULTS = !['0', 'false'].includes(String(process.env.SOFASCORE_ALLOW_RESULTS ?? 'false').toLowerCase());
+    if (SOFASCORE_ALLOW_RESULTS && (code === 'FL1') && (!events || events.length === 0)) {
+      try {
+        const sofas = await fetchSofascoreFinishedMatchesForCompetition(Math.max(3, Math.abs(startOffset)), 'ligue');
+        if (sofas && sofas.length) {
+          // Map sofascore to standard match objects
+          events = sofas.map((m: any) => mapSofascoreMatch(m, 'FL1'));
+        }
+      } catch {
+        // ignore
+      }
+    }
+    // 4) Final fallback to broad window then filter
+    if (!events || events.length === 0) {
+      const all = await fetchFootballEventsWindow('results', startOffset, endOffset).catch(() => []);
+      events = (all || []).filter((e: any) => e.competition?.code === code);
+    }
+    // 4b) For UEFA competitions, also look ahead for scheduled matches so finals are not missed before kickoff.
+    if ((!events || events.length === 0) && ['CL', 'UEL', 'UECL'].includes(code)) {
+      try {
+        const scheduled = await fetchCompetitionEventsByPriority(code, Math.min(startOffset, -7), Math.max(endOffset, 28), 'today').catch(() => []);
+        if (scheduled && scheduled.length) {
+          events = scheduled;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    // 5) If still empty, try Sofascore window fetch (both results and upcoming)
+    if (SOFASCORE_ALLOW_RESULTS && (code === 'FL1') && (!events || events.length === 0)) {
+      try {
+        const sofasWindow = await fetchSofascoreCompetitionWindow(code, startOffset, endOffset, 'results').catch(() => []);
+        if (sofasWindow && sofasWindow.length) events = sofasWindow;
+      } catch {
+        // ignore
+      }
+    }
+    let merged = mergeResultsSnapshot(events);
+    // Sanitize: remove events wrongly tagged as FL1 when teams are not in French championship
+    try {
+      if (code === 'FL1') {
+        const seasonMatches = await fetchSportsDbCompetitionSeasonEvents('FL1', startOffset - 7, endOffset + 7, 'results', COMP_INFO).catch(() => []);
+        const frenchTeams = new Set((seasonMatches ?? []).flatMap((m: any) => [String(m.homeTeam?.name ?? '').toLowerCase(), String(m.awayTeam?.name ?? '').toLowerCase()]));
+        const before = merged.length;
+        merged = merged.filter((e: any) => {
+          if (e?.competition?.code !== 'FL1') return true;
+          const h = String(e.homeTeam?.name ?? '').toLowerCase();
+          const a = String(e.awayTeam?.name ?? '').toLowerCase();
+          // keep only if both teams are known French teams
+          return frenchTeams.has(h) && frenchTeams.has(a);
+        });
+        if (merged.length !== before) {
+          console.log(`[Prefetch] Sanitized FL1: removed ${before - merged.length} non-FL1 events`);
+        }
+      }
+    } catch (e) {
+      // ignore sanitation failures
+    }
+
+    writeLastResultsSnapshot({ events: merged, fetchedAt: Date.now() });
+    const count = merged.filter((e: any) => e.competition?.code === code).length;
+    const result: any = { code, count, mergedCount: merged.length, fetchedAt: Date.now() };
+    if (debug) {
+      result.candidates = events;
+      try {
+        result.sourceStats = Object.fromEntries(Object.entries(SOURCE_STATS).map(([k, v]) => [k, { successes: v.successes, failures: v.failures, lastFetch: v.lastFetch }]));
+      } catch {}
+    }
+    return result;
+  } catch (e) {
+    throw e;
+  }
 }
 
 function selectResultsForDisplay(inputEvents: any[], now = new Date()) {
@@ -1899,6 +914,29 @@ function pruneArchive(prefix: string, keepDays: number) {
   } catch {}
 }
 
+// On import, attempt a one-time cleanup of the last snapshots to remove placeholder events
+try {
+  (async () => {
+    try {
+      const kinds: Array<'live' | 'today' | 'results'> = ['live', 'today', 'results'];
+      for (const k of kinds) {
+        const snap = readArchiveMerged(k) as any;
+        if (snap && (snap.events || snap.matches)) {
+          const arr = snap.events ?? snap.matches ?? [];
+          const sanitized = sanitizeEvents(arr);
+          if (sanitized.length !== (arr?.length ?? 0)) {
+            console.log(`[SanitizeInit] cleaned ${k}: ${arr.length} -> ${sanitized.length}`);
+            if (k === 'live') writeArchiveSnapshot(k, { matches: sanitized, fetchedAt: snap.fetchedAt ?? Date.now() });
+            else writeArchiveSnapshot(k, { events: sanitized, fetchedAt: snap.fetchedAt ?? Date.now() });
+          }
+        }
+      }
+    } catch (e) {
+      // don't fail startup on cleanup errors
+    }
+  })();
+} catch {}
+
 function writeArchiveSnapshot(kind: 'live' | 'today' | 'results', payload: any) {
   try {
     ensureCacheDir();
@@ -1954,6 +992,42 @@ function readArchiveMerged(kind: 'live' | 'results' | 'today') {
   }
 }
 
+function isValidEventForWidget(e: any) {
+  if (!e) return false;
+  // provenance/injected guard
+  if (String(e.provenance ?? '').toLowerCase() === 'injected') return false;
+
+  const id = String(e.id ?? '');
+  if (id.includes('test') || id.includes('injected') || id.includes('fl1-test')) return false;
+
+  const home = String(e.homeTeam?.name ?? e.homeTeam?.shortName ?? '').trim();
+  const away = String(e.awayTeam?.name ?? e.awayTeam?.shortName ?? '').trim();
+  if (!home || !away) return false;
+
+  // reject placeholder lines like "Final 30 May 2026 at Stadium"
+  if (/^final\b/i.test(home) || /^final\b/i.test(away) || /^finale\b/i.test(home) || /^finale\b/i.test(away)) return false;
+
+  return true;
+}
+
+function sanitizeEvents(events: any[]) {
+  if (!Array.isArray(events) || events.length === 0) return [];
+  try {
+    const filtered = events.filter((e: any) => isValidEventForWidget(e));
+    return dedupeEvents(filtered);
+  } catch (e) {
+    return events;
+  }
+}
+
+let lastDailyPrefetch: { date: string; timestamp: number } | null = null;
+
+function isDailyPrefetchNeeded() {
+  const today = getTodayDateStr();
+  if (!lastDailyPrefetch) return true;
+  return lastDailyPrefetch.date !== today;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') ?? 'live';
@@ -1969,9 +1043,9 @@ export async function GET(request: Request) {
     if (!live.matches?.length) {
       try {
         const combined = dedupeEvents([
-          ...(await fetchSportsDbWindow(0, 0)),
+          ...(await fetchSportsDbWindow(0, 0, COMP_INFO)),
           ...(await Promise.all(
-            COMPETITIONS.map(async (code) => fetchSportsDbCompetitionNextEventsFresh(code, 0, 0, 'today'))
+            COMPETITIONS.map(async (code) => fetchSportsDbCompetitionNextEventsFresh(code, 0, 0, 'today', COMP_INFO))
           )).flat(),
         ]).filter((match: any) => ['IN_PLAY', 'PAUSED'].includes(match.status));
         sportsDbLive = combined;
@@ -2092,12 +1166,12 @@ export async function GET(request: Request) {
                 return fetchLigue1OfficialCalendarEvents('today', 0, 21);
               }
               return Promise.all([
-                fetchSportsDbCompetitionNextEventsFresh(code, 0, 21, 'today'),
-                fetchSportsDbCompetitionSeasonEvents(code, 0, 21, 'today'),
+                fetchSportsDbCompetitionNextEventsFresh(code, 0, 21, 'today', COMP_INFO),
+                fetchSportsDbCompetitionSeasonEvents(code, 0, 21, 'today', COMP_INFO),
               ]).then((parts) => parts.flat());
             }
 
-            return fetchSportsDbCompetitionSeasonEvents(code, -21, 0, 'results');
+            return fetchSportsDbCompetitionSeasonEvents(code, -21, 0, 'results', COMP_INFO);
           })
         );
         const safetyFlat = safetyEvents.flat();
@@ -2108,9 +1182,11 @@ export async function GET(request: Request) {
 
       // Always serve today from snapshot; for results only bypass if severely sparse
       if (type === 'today') {
-        const compsList = COMPETITIONS.map((code) => ({ code, name: COMP_INFO[code]?.name ?? code, emblem: COMP_INFO[code]?.emblem ?? null, count: events.filter((e: any) => e.competition?.code === code).length }));
-        // Save updated events back to snapshot so FL1 top-up persists
-        writeLastTodaySnapshot({ events, fetchedAt: snapshot.fetchedAt });
+      const compsList = COMPETITIONS.map((code) => ({ code, name: COMP_INFO[code]?.name ?? code, emblem: COMP_INFO[code]?.emblem ?? null, count: events.filter((e: any) => e.competition?.code === code).length }));
+      // Sanitize FL1 events before persisting
+      const sanitized = await sanitizeTodayFL1Events(events);
+      // Save updated events back to snapshot so FL1 top-up persists
+      writeLastTodaySnapshot({ events: sanitized, fetchedAt: snapshot.fetchedAt });
         return NextResponse.json(
           { events, competitions: compsList, fetchedAt: snapshot.fetchedAt, stale: false },
           { headers: { 
@@ -2126,6 +1202,38 @@ export async function GET(request: Request) {
       // For results: serve if we have decent scored coverage or multi-league minimum
       const compCount = new Set(events.map((e: any) => e.competition?.code).filter(Boolean)).size;
       const scoredCount = events.filter((e: any) => e.score?.fullTime?.home !== null && e.score?.fullTime?.away !== null).length;
+      // If a top-tier league is missing from the snapshot, try a targeted top-up
+      const importantLeagues = ['FL1', 'PL', 'PD', 'SA'];
+      const snapshotPresentCodes = new Set(events.map((e: any) => e.competition?.code).filter(Boolean));
+      const missingImportant = importantLeagues.filter((c) => !snapshotPresentCodes.has(c));
+      if (missingImportant.length) {
+        try {
+          const topups = await Promise.all(missingImportant.map(async (code) => {
+            // Prefer archived snapshot first (fast, local)
+            const archived = getArchivedCompetitionEvents(code, 'results') || [];
+            if (archived.length) return archived;
+            // Otherwise try network seasonal fetch as fallback, then broader priority fetch
+            try {
+              const fromTsdb = await fetchSportsDbCompetitionSeasonEvents(code, -21, 0, 'results', COMP_INFO).catch(() => []);
+              if (fromTsdb && fromTsdb.length) return fromTsdb;
+            } catch {
+              // fall through
+            }
+            try {
+              const byPriority = await fetchCompetitionEventsByPriority(code, -21, 0, 'results').catch(() => []);
+              return byPriority ?? [];
+            } catch {
+              return [];
+            }
+          }));
+          const flat = topups.flat();
+          if (flat.length) {
+            events = dedupeEvents([...events, ...flat]).map((event: any) => enrichWithStoredScore(event));
+          }
+        } catch (e) {
+          // ignore top-up failures, we'll fall back to existing heuristic
+        }
+      }
       if (scoredCount >= 8 || (events.length >= 12 && compCount >= 2)) {
         console.log(`[Snapshot] Serving ${snapshot.events.length} ${type} matches from cache`);
         const compsList = COMPETITIONS.map((code) => ({ code, name: COMP_INFO[code]?.name ?? code, emblem: COMP_INFO[code]?.emblem ?? null, count: events.filter((e: any) => e.competition?.code === code).length }));
@@ -2180,12 +1288,12 @@ export async function GET(request: Request) {
               return fetchLigue1OfficialCalendarEvents('today', 0, 21);
             }
             return Promise.all([
-              fetchSportsDbCompetitionNextEventsFresh(code, 0, 21, 'today'),
-              fetchSportsDbCompetitionSeasonEvents(code, 0, 21, 'today'),
+              fetchSportsDbCompetitionNextEventsFresh(code, 0, 21, 'today', COMP_INFO),
+              fetchSportsDbCompetitionSeasonEvents(code, 0, 21, 'today', COMP_INFO),
             ]).then((parts) => parts.flat());
           }
 
-          return fetchSportsDbCompetitionSeasonEvents(code, -21, 0, 'results');
+          return fetchSportsDbCompetitionSeasonEvents(code, -21, 0, 'results', COMP_INFO);
         })
       );
       const safetyFlat = safetyEvents.flat();
@@ -2198,6 +1306,18 @@ export async function GET(request: Request) {
     if (archivedFl1Events.length && !events.some((event: any) => event.competition?.code === 'FL1')) {
       events = dedupeEvents([...events, ...archivedFl1Events]);
     }
+
+      // If still missing FL1 for `today`, attempt a free Sofascore window fetch to top-up display only.
+      if (type === 'today' && !events.some((event: any) => event.competition?.code === 'FL1')) {
+        try {
+          const sofasWindow = await fetchSofascoreCompetitionWindow('FL1', 0, 21, 'today').catch(() => []);
+          if (sofasWindow && sofasWindow.length) {
+            events = dedupeEvents([...events, ...sofasWindow.map((m: any) => mapSofascoreMatch(m, 'FL1'))]);
+          }
+        } catch {
+          // ignore sofascore failures for display
+        }
+      }
 
     // If upstream returns empty, serve last known snapshot to avoid blank UI
     if (type === 'today' && (!events || events.length === 0)) {
@@ -2215,13 +1335,28 @@ export async function GET(request: Request) {
       }
     }
 
-    // Persist a fresh snapshot for `today` so we can serve it when upstream fails later
+    // Persist a fresh snapshot for `today` so we can serve it when upstream fails later.
+    // NOTE: we intentionally avoid persisting events that originate only from Sofascore/Flashscore
+    // or injected test data to prevent fabricated matches from becoming the durable snapshot.
     if (type === 'today' && events && events.length) {
       try {
         const existing = readLastTodaySnapshot();
         const mergedToday = mergeTodaySnapshot(events);
-        if (shouldPersistTodaySnapshot(existing?.events, mergedToday)) {
-          writeLastTodaySnapshot({ events: mergedToday, fetchedAt: Date.now() });
+
+        // Filter snapshot candidates: drop sofascore/flashscore-only and injected events
+        const snapshotCandidates = (mergedToday ?? []).filter((e: any) => {
+          if (!e) return false;
+          if (e.provenance === 'injected') return false;
+          const src = String(e.source ?? e.liveSource ?? '').toLowerCase();
+          if (src === 'sofascore' || src === 'flashscore') return false;
+          return true;
+        });
+
+        if (shouldPersistTodaySnapshot(existing?.events, snapshotCandidates)) {
+          // First normalize competition codes (CL/UEL/UECL) to avoid misclassification
+          const normalized = snapshotCandidates.map((event) => normalizeEventCompetition(event, COMP_INFO));
+          const sanitizedCandidates = await sanitizeTodayFL1Events(normalized);
+          writeLastTodaySnapshot({ events: sanitizedCandidates, fetchedAt: Date.now() });
         }
       } catch (e) {
         // ignore write failures
@@ -2231,7 +1366,9 @@ export async function GET(request: Request) {
     // Persist merged snapshot for results to avoid league dropouts on partial source failures
     if (type === 'results' && events && events.length) {
       try {
-        const mergedResults = mergeResultsSnapshot(events);
+        // Normalize competition codes before merging/persisting results
+        const normalizedForResults = events.map((event) => normalizeEventCompetition(event, COMP_INFO));
+        const mergedResults = mergeResultsSnapshot(normalizedForResults);
         writeLastResultsSnapshot({ events: mergedResults, fetchedAt: Date.now() });
       } catch (e) {
         // ignore write failures

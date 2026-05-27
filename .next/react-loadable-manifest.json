@@ -1,38 +1,47 @@
 {
   "app/page.tsx -> @/components/ui/ThemeToggle": {
-    "id": "app/page.tsx -> @/components/ui/ThemeToggle",
+    "id": 8962,
     "files": [
-      "static/chunks/_app-pages-browser_components_ui_ThemeToggle_tsx.js"
+      "static/chunks/962.fc9a0831b694633b.js"
     ]
   },
   "app/page.tsx -> @/components/widgets/CryptoWidget": {
-    "id": "app/page.tsx -> @/components/widgets/CryptoWidget",
+    "id": 4523,
     "files": [
-      "static/chunks/_app-pages-browser_components_widgets_CryptoWidget_tsx.js"
+      "static/chunks/123.bad1d382b31e460b.js",
+      "static/chunks/964.6bbef258dc2d7f43.js",
+      "static/chunks/821.e6915d7691e7cd41.js",
+      "static/chunks/523.5003952ee2ee7902.js"
     ]
   },
   "app/page.tsx -> @/components/widgets/EnergyWidget": {
-    "id": "app/page.tsx -> @/components/widgets/EnergyWidget",
+    "id": 5699,
     "files": [
-      "static/chunks/_app-pages-browser_components_widgets_EnergyWidget_tsx.js"
+      "static/chunks/123.bad1d382b31e460b.js",
+      "static/chunks/964.6bbef258dc2d7f43.js",
+      "static/chunks/153.1bcb8a0585fae6d4.js",
+      "static/chunks/699.939575462e34fae0.js"
     ]
   },
   "app/page.tsx -> @/components/widgets/FootballWidget": {
-    "id": "app/page.tsx -> @/components/widgets/FootballWidget",
+    "id": 4857,
     "files": [
-      "static/chunks/_app-pages-browser_components_widgets_FootballWidget_tsx.js"
+      "static/chunks/123.bad1d382b31e460b.js",
+      "static/chunks/857.0b7cef1f34d1e7ad.js"
     ]
   },
   "app/page.tsx -> @/components/widgets/NewsWidget": {
-    "id": "app/page.tsx -> @/components/widgets/NewsWidget",
+    "id": 9175,
     "files": [
-      "static/chunks/_app-pages-browser_components_widgets_NewsWidget_tsx.js"
+      "static/chunks/123.bad1d382b31e460b.js",
+      "static/chunks/175.7465ff4cda056468.js"
     ]
   },
   "app/page.tsx -> @/components/widgets/WeatherWidget": {
-    "id": "app/page.tsx -> @/components/widgets/WeatherWidget",
+    "id": 6090,
     "files": [
-      "static/chunks/_app-pages-browser_components_widgets_WeatherWidget_tsx.js"
+      "static/chunks/123.bad1d382b31e460b.js",
+      "static/chunks/90.fe6d22e40943f15e.js"
     ]
   }
 }

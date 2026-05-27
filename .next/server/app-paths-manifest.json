@@ -1,9 +1,14 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/api/weather/route": "app/api/weather/route.js",
-  "/api/crypto/route": "app/api/crypto/route.js",
+  "/api/football/route": "app/api/football/route.js",
+  "/api/admin/cache/route": "app/api/admin/cache/route.js",
   "/api/energy/route": "app/api/energy/route.js",
+  "/api/football/inject-results/route": "app/api/football/inject-results/route.js",
+  "/api/crypto/route": "app/api/crypto/route.js",
+  "/api/football/refresh-results/route": "app/api/football/refresh-results/route.js",
+  "/api/football/refresh-results/targeted/route": "app/api/football/refresh-results/targeted/route.js",
   "/api/news/route": "app/api/news/route.js",
-  "/api/football/route": "app/api/football/route.js"
+  "/api/football/match/route": "app/api/football/match/route.js",
+  "/api/weather/route": "app/api/weather/route.js"
 }

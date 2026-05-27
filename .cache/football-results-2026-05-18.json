@@ -1,0 +1,1806 @@
+{
+  "events": [
+    {
+      "id": "wiki:CL:2001-07-07:Puskás Aréna in Budapest will host the final Qualifying:8 July::27 August 2025Competition proper:16 September 2025",
+      "utcDate": "2001-07-07T00:00:00Z",
+      "homeTeam": {
+        "name": "Puskás Aréna in Budapest will host the final Qualifying:8 July"
+      },
+      "awayTeam": {
+        "name": "27 August 2025Competition proper:16 September 2025"
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "FINISHED",
+      "score": {
+        "fullTime": {
+          "home": 25,
+          "away": 30
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2025-06-17:Second qualifying round 18 June 2025::",
+      "utcDate": "2025-06-17T00:00:00Z",
+      "homeTeam": {
+        "name": "Second qualifying round 18 June 2025"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "SCHEDULED",
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2025-07-20:Third qualifying round 21 July 2025::",
+      "utcDate": "2025-07-20T00:00:00Z",
+      "homeTeam": {
+        "name": "Third qualifying round 21 July 2025"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "SCHEDULED",
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2001-09-29:Matchday 2 30 September::1 October 2025",
+      "utcDate": "2001-09-29T00:00:00Z",
+      "homeTeam": {
+        "name": "Matchday 2 30 September"
+      },
+      "awayTeam": {
+        "name": "1 October 2025"
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "SCHEDULED",
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2025-10-21:Matchday 3 21–22 October 2025::",
+      "utcDate": "2025-10-21T00:00:00Z",
+      "homeTeam": {
+        "name": "Matchday 3 21–22 October 2025"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "FINISHED",
+      "score": {
+        "fullTime": {
+          "home": 21,
+          "away": 22
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2025-11-04:Matchday 4 4–5 November 2025::",
+      "utcDate": "2025-11-04T00:00:00Z",
+      "homeTeam": {
+        "name": "Matchday 4 4–5 November 2025"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "FINISHED",
+      "score": {
+        "fullTime": {
+          "home": 4,
+          "away": 5
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2025-11-25:Matchday 5 25–26 November 2025::",
+      "utcDate": "2025-11-25T00:00:00Z",
+      "homeTeam": {
+        "name": "Matchday 5 25–26 November 2025"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "FINISHED",
+      "score": {
+        "fullTime": {
+          "home": 25,
+          "away": 26
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2025-12-09:Matchday 6 9–10 December 2025::",
+      "utcDate": "2025-12-09T00:00:00Z",
+      "homeTeam": {
+        "name": "Matchday 6 9–10 December 2025"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "FINISHED",
+      "score": {
+        "fullTime": {
+          "home": 9,
+          "away": 10
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2026-01-20:Matchday 7 20–21 January 2026::",
+      "utcDate": "2026-01-20T00:00:00Z",
+      "homeTeam": {
+        "name": "Matchday 7 20–21 January 2026"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "FINISHED",
+      "score": {
+        "fullTime": {
+          "home": 20,
+          "away": 21
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2026-01-27:Matchday 8 28 January 2026::",
+      "utcDate": "2026-01-27T00:00:00Z",
+      "homeTeam": {
+        "name": "Matchday 8 28 January 2026"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "SCHEDULED",
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2026-02-26:Round of 16 27 February 2026::",
+      "utcDate": "2026-02-26T00:00:00Z",
+      "homeTeam": {
+        "name": "Round of 16 27 February 2026"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "SCHEDULED",
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2026-04-28:Semi-finals 28–29 April 2026::",
+      "utcDate": "2026-04-28T00:00:00Z",
+      "homeTeam": {
+        "name": "Semi-finals 28–29 April 2026"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "FINISHED",
+      "score": {
+        "fullTime": {
+          "home": 28,
+          "away": 29
+        }
+      }
+    },
+    {
+      "id": "wiki:CL:2026-05-29:Final 30 May 2026 at Puskás Aréna, Budapest::",
+      "utcDate": "2026-05-29T00:00:00Z",
+      "homeTeam": {
+        "name": "Final 30 May 2026 at Puskás Aréna, Budapest"
+      },
+      "awayTeam": {
+        "name": ""
+      },
+      "competition": {
+        "code": "CL"
+      },
+      "status": "SCHEDULED",
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        }
+      }
+    },
+    {
+      "id": 77554,
+      "status": "FINISHED",
+      "utcDate": "2026-05-16T13:30:00Z",
+      "homeTeam": {
+        "id": 40,
+        "name": "FC Bayern München",
+        "shortName": "FC Bayern München",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/1/1f/Logo_FC_Bayern_M%C3%BCnchen_%282002%E2%80%932017%29.svg"
+      },
+      "awayTeam": {
+        "id": 65,
+        "name": "1. FC Köln",
+        "shortName": "1. FC Köln",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/0/01/1._FC_Koeln_Logo_2014%E2%80%93.svg"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga",
+      "publicOdds": null
+    },
+    {
+      "id": 77555,
+      "status": "FINISHED",
+      "utcDate": "2026-05-16T13:30:00Z",
+      "homeTeam": {
+        "id": 6,
+        "name": "Bayer 04 Leverkusen",
+        "shortName": "Bayer 04 Leverkusen",
+        "crest": "https://www.bundesliga-reisefuehrer.de/sites/default/files/B04_Standard_Logo_RGB.png"
+      },
+      "awayTeam": {
+        "id": 100,
+        "name": "Hamburger SV",
+        "shortName": "Hamburger SV",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Hamburger_SV_logo.svg"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga",
+      "publicOdds": null
+    },
+    {
+      "id": 77556,
+      "status": "FINISHED",
+      "utcDate": "2026-05-16T13:30:00Z",
+      "homeTeam": {
+        "id": 91,
+        "name": "Eintracht Frankfurt",
+        "shortName": "Eintracht Frankfurt",
+        "crest": "https://i.imgur.com/X8NFkOb.png"
+      },
+      "awayTeam": {
+        "id": 16,
+        "name": "VfB Stuttgart",
+        "shortName": "VfB Stuttgart",
+        "crest": "https://i.imgur.com/v0tkpNx.png"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga",
+      "publicOdds": null
+    },
+    {
+      "id": 77557,
+      "status": "FINISHED",
+      "utcDate": "2026-05-16T13:30:00Z",
+      "homeTeam": {
+        "id": 112,
+        "name": "SC Freiburg",
+        "shortName": "SC Freiburg",
+        "crest": "https://i.imgur.com/r3mvi0h.png"
+      },
+      "awayTeam": {
+        "id": 1635,
+        "name": "RB Leipzig",
+        "shortName": "RB Leipzig",
+        "crest": "https://i.imgur.com/Rpwsjz1.png"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga",
+      "publicOdds": null
+    },
+    {
+      "id": 77558,
+      "status": "FINISHED",
+      "utcDate": "2026-05-16T13:30:00Z",
+      "homeTeam": {
+        "id": 134,
+        "name": "SV Werder Bremen",
+        "shortName": "SV Werder Bremen",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/b/be/SV-Werder-Bremen-Logo.svg"
+      },
+      "awayTeam": {
+        "id": 7,
+        "name": "Borussia Dortmund",
+        "shortName": "Borussia Dortmund",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Borussia_Dortmund_logo.svg/960px-Borussia_Dortmund_logo.svg.png"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga",
+      "publicOdds": null
+    },
+    {
+      "id": 77559,
+      "status": "FINISHED",
+      "utcDate": "2026-05-16T13:30:00Z",
+      "homeTeam": {
+        "id": 87,
+        "name": "Borussia Mönchengladbach",
+        "shortName": "Borussia Mönchengladbach",
+        "crest": "https://i.imgur.com/KSIk0Eu.png"
+      },
+      "awayTeam": {
+        "id": 175,
+        "name": "TSG Hoffenheim",
+        "shortName": "TSG Hoffenheim",
+        "crest": "https://i.imgur.com/gF0PfEl.png"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga",
+      "publicOdds": null
+    },
+    {
+      "id": 77560,
+      "status": "FINISHED",
+      "utcDate": "2026-05-16T13:30:00Z",
+      "homeTeam": {
+        "id": 80,
+        "name": "1. FC Union Berlin",
+        "shortName": "1. FC Union Berlin",
+        "crest": "https://assets.dfb.de/uploads/000/018/232/small_union-Berlin.jpg"
+      },
+      "awayTeam": {
+        "id": 95,
+        "name": "FC Augsburg",
+        "shortName": "FC Augsburg",
+        "crest": "https://i.imgur.com/sdE62e2.png"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga",
+      "publicOdds": null
+    },
+    {
+      "id": 77561,
+      "status": "FINISHED",
+      "utcDate": "2026-05-16T13:30:00Z",
+      "homeTeam": {
+        "id": 98,
+        "name": "FC St. Pauli",
+        "shortName": "FC St. Pauli",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Fc_st_pauli_logo.svg"
+      },
+      "awayTeam": {
+        "id": 131,
+        "name": "VfL Wolfsburg",
+        "shortName": "VfL Wolfsburg",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/VfL_Wolfsburg_Logo.svg/120px-VfL_Wolfsburg_Logo.svg.png"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga",
+      "publicOdds": null
+    },
+    {
+      "id": 77562,
+      "status": "FINISHED",
+      "utcDate": "2026-05-16T13:30:00Z",
+      "homeTeam": {
+        "id": 199,
+        "name": "1. FC Heidenheim 1846",
+        "shortName": "1. FC Heidenheim 1846",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/9/9d/1._FC_Heidenheim_1846.svg"
+      },
+      "awayTeam": {
+        "id": 81,
+        "name": "1. FSV Mainz 05",
+        "shortName": "1. FSV Mainz 05",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Logo_Mainz_05.svg/1200px-Logo_Mainz_05.svg.png"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga",
+      "publicOdds": null
+    },
+    {
+      "id": "2265397",
+      "status": "FINISHED",
+      "utcDate": "2026-05-17T18:45:00Z",
+      "homeTeam": {
+        "id": "134783",
+        "name": "Cagliari",
+        "shortName": "Cagliari",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/wvsvxt1447534471.png"
+      },
+      "awayTeam": {
+        "id": "133687",
+        "name": "Torino",
+        "shortName": "Torino",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/xxprty1448806802.png"
+      },
+      "competition": {
+        "code": "SA",
+        "name": "Italian Serie A",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/67q3q21679951383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 2,
+          "away": 1
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Italian Serie A",
+      "leagueName": "Italian Serie A"
+    },
+    {
+      "id": "2265396",
+      "status": "FINISHED",
+      "utcDate": "2026-05-17T16:00:00Z",
+      "homeTeam": {
+        "id": "134782",
+        "name": "Atalanta",
+        "shortName": "Atalanta",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/lrvxg71534873930.png"
+      },
+      "awayTeam": {
+        "id": "134781",
+        "name": "Bologna",
+        "shortName": "Bologna",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/2qi1u31655592366.png"
+      },
+      "competition": {
+        "code": "SA",
+        "name": "Italian Serie A",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/67q3q21679951383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 0,
+          "away": 1
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Italian Serie A",
+      "leagueName": "Italian Serie A"
+    },
+    {
+      "id": "2265398",
+      "status": "FINISHED",
+      "utcDate": "2026-05-17T10:00:00Z",
+      "homeTeam": {
+        "id": "134243",
+        "name": "Como",
+        "shortName": "Como",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/02x81t1627405841.png"
+      },
+      "awayTeam": {
+        "id": "135728",
+        "name": "Parma",
+        "shortName": "Parma",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/6yiaxs1627406063.png"
+      },
+      "competition": {
+        "code": "SA",
+        "name": "Italian Serie A",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/67q3q21679951383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 1,
+          "away": 0
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Italian Serie A",
+      "leagueName": "Italian Serie A"
+    },
+    {
+      "id": "2267680",
+      "status": "FINISHED",
+      "utcDate": "2026-05-16T15:15:00Z",
+      "homeTeam": {
+        "id": "133945",
+        "name": "Debrecen",
+        "shortName": "Debrecen",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/0e2yn71579728606.png"
+      },
+      "awayTeam": {
+        "id": "138183",
+        "name": "Újpest",
+        "shortName": "Újpest",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/03bmx91688115233.png"
+      },
+      "competition": {
+        "code": "tsdb:4690",
+        "name": "Hungarian NB I",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/7o3q3t1616017529.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 2,
+          "away": 1
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Hungarian NB I",
+      "leagueName": "Hungarian NB I"
+    },
+    {
+      "id": "2267681",
+      "status": "FINISHED",
+      "utcDate": "2026-05-16T15:15:00Z",
+      "homeTeam": {
+        "id": "134611",
+        "name": "Diósgyőr",
+        "shortName": "Diósgyőr",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/pe891o1775081887.png"
+      },
+      "awayTeam": {
+        "id": "138185",
+        "name": "Paks",
+        "shortName": "Paks",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/kos9hc1604523576.png"
+      },
+      "competition": {
+        "code": "tsdb:4690",
+        "name": "Hungarian NB I",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/7o3q3t1616017529.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 1,
+          "away": 3
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Hungarian NB I",
+      "leagueName": "Hungarian NB I"
+    },
+    {
+      "id": "2267682",
+      "status": "FINISHED",
+      "utcDate": "2026-05-16T15:15:00Z",
+      "homeTeam": {
+        "id": "134620",
+        "name": "Ferencváros",
+        "shortName": "Ferencváros",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/wk17od1688115265.png"
+      },
+      "awayTeam": {
+        "id": "138186",
+        "name": "Zalaegerszeg",
+        "shortName": "Zalaegerszeg",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/nvno281579728587.png"
+      },
+      "competition": {
+        "code": "tsdb:4690",
+        "name": "Hungarian NB I",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/7o3q3t1616017529.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 3,
+          "away": 0
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Hungarian NB I",
+      "leagueName": "Hungarian NB I"
+    },
+    {
+      "id": "2267434",
+      "status": "FINISHED",
+      "utcDate": "2026-05-15T19:00:00Z",
+      "homeTeam": {
+        "id": "133601",
+        "name": "Aston Villa",
+        "shortName": "Aston Villa",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/jykrpv1717309891.png"
+      },
+      "awayTeam": {
+        "id": "133602",
+        "name": "Liverpool",
+        "shortName": "Liverpool",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/kfaher1737969724.png"
+      },
+      "competition": {
+        "code": "PL",
+        "name": "English Premier League",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/gasy9d1737743125.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 4,
+          "away": 2
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Premier League",
+      "leagueName": "Premier League",
+      "publicOdds": null
+    },
+    {
+      "id": "2267685",
+      "status": "FINISHED",
+      "utcDate": "2026-05-15T18:00:00Z",
+      "homeTeam": {
+        "id": "138182",
+        "name": "Puskás Akadémia FC",
+        "shortName": "Puskás Akadémia FC",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/mojpg21625319167.png"
+      },
+      "awayTeam": {
+        "id": "134028",
+        "name": "MTK Budapest",
+        "shortName": "MTK Budapest",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/brw5tj1688115226.png"
+      },
+      "competition": {
+        "code": "tsdb:4690",
+        "name": "Hungarian NB I",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/7o3q3t1616017529.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 2,
+          "away": 2
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Hungarian NB I",
+      "leagueName": "Hungarian NB I",
+      "publicOdds": null
+    },
+    {
+      "id": "2267684",
+      "status": "FINISHED",
+      "utcDate": "2026-05-15T15:45:00Z",
+      "homeTeam": {
+        "id": "141223",
+        "name": "Nyíregyháza",
+        "shortName": "Nyíregyháza",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/un2th71617288448.png"
+      },
+      "awayTeam": {
+        "id": "141222",
+        "name": "Kazincbarcika",
+        "shortName": "Kazincbarcika",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/957alm1617288444.png"
+      },
+      "competition": {
+        "code": "tsdb:4690",
+        "name": "Hungarian NB I",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/7o3q3t1616017529.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 2,
+          "away": 2
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Hungarian NB I",
+      "leagueName": "Hungarian NB I",
+      "publicOdds": null
+    },
+    {
+      "id": "2279751",
+      "status": "FINISHED",
+      "utcDate": "2026-05-14T19:30:00Z",
+      "homeTeam": {
+        "id": "133738",
+        "name": "Real Madrid",
+        "shortName": "Real Madrid",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/vwvwrw1473502969.png"
+      },
+      "awayTeam": {
+        "id": "135455",
+        "name": "Real Oviedo",
+        "shortName": "Real Oviedo",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/yuwqus1447590681.png"
+      },
+      "competition": {
+        "code": "PD",
+        "name": "Spanish La Liga",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/ja4it51687628717.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 2,
+          "away": 0
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "La Liga",
+      "leagueName": "La Liga",
+      "publicOdds": null
+    },
+    {
+      "id": "2279749",
+      "status": "FINISHED",
+      "utcDate": "2026-05-14T18:00:00Z",
+      "homeTeam": {
+        "id": "134700",
+        "name": "Girona",
+        "shortName": "Girona",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/kfu7zu1659897499.png"
+      },
+      "awayTeam": {
+        "id": "133724",
+        "name": "Real Sociedad",
+        "shortName": "Real Sociedad",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/vptvpr1473502986.png"
+      },
+      "competition": {
+        "code": "PD",
+        "name": "Spanish La Liga",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/ja4it51687628717.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 1,
+          "away": 1
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "La Liga",
+      "leagueName": "La Liga",
+      "publicOdds": null
+    },
+    {
+      "id": "2279752",
+      "status": "FINISHED",
+      "utcDate": "2026-05-14T17:00:00Z",
+      "homeTeam": {
+        "id": "133725",
+        "name": "Valencia",
+        "shortName": "Valencia",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/dm8l6o1655594864.png"
+      },
+      "awayTeam": {
+        "id": "133728",
+        "name": "Rayo Vallecano",
+        "shortName": "Rayo Vallecano",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/nzhu941655595465.png"
+      },
+      "competition": {
+        "code": "PD",
+        "name": "Spanish La Liga",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/ja4it51687628717.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 1,
+          "away": 1
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "La Liga",
+      "leagueName": "La Liga",
+      "publicOdds": null
+    },
+    {
+      "id": "2267379",
+      "status": "FINISHED",
+      "utcDate": "2026-05-13T19:00:00Z",
+      "homeTeam": {
+        "id": "133613",
+        "name": "Manchester City",
+        "shortName": "Manchester City",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/vwpvry1467462651.png"
+      },
+      "awayTeam": {
+        "id": "133632",
+        "name": "Crystal Palace",
+        "shortName": "Crystal Palace",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ia6i3m1656014992.png"
+      },
+      "competition": {
+        "code": "PL",
+        "name": "English Premier League",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/gasy9d1737743125.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 3,
+          "away": 0
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Premier League",
+      "leagueName": "Premier League",
+      "publicOdds": null
+    },
+    {
+      "id": "2267979",
+      "status": "FINISHED",
+      "utcDate": "2026-05-13T18:30:00Z",
+      "homeTeam": {
+        "id": "137670",
+        "name": "Raków Częstochowa",
+        "shortName": "Raków Częstochowa",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/vy8paa1579458598.png"
+      },
+      "awayTeam": {
+        "id": "135297",
+        "name": "Jagiellonia Białystok",
+        "shortName": "Jagiellonia Białystok",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ucze1y1601404699.png"
+      },
+      "competition": {
+        "code": "tsdb:4422",
+        "name": "Polish Ekstraklasa",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/l3jovw1516960585.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 0,
+          "away": 2
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Polish Ekstraklasa",
+      "leagueName": "Polish Ekstraklasa",
+      "publicOdds": null
+    },
+    {
+      "id": "2267972",
+      "status": "FINISHED",
+      "utcDate": "2026-05-13T16:00:00Z",
+      "homeTeam": {
+        "id": "135660",
+        "name": "Arka Gdynia",
+        "shortName": "Arka Gdynia",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/i6ls7n1698553767.png"
+      },
+      "awayTeam": {
+        "id": "135296",
+        "name": "Górnik Zabrze",
+        "shortName": "Górnik Zabrze",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/fk1fam1767928408.png"
+      },
+      "competition": {
+        "code": "tsdb:4422",
+        "name": "Polish Ekstraklasa",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/l3jovw1516960585.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 0,
+          "away": 0
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Polish Ekstraklasa",
+      "leagueName": "Polish Ekstraklasa",
+      "publicOdds": null
+    },
+    {
+      "id": "2279750",
+      "status": "FINISHED",
+      "utcDate": "2026-05-12T19:30:00Z",
+      "homeTeam": {
+        "id": "133730",
+        "name": "Osasuna",
+        "shortName": "Osasuna",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/rvspvt1473502960.png"
+      },
+      "awayTeam": {
+        "id": "133729",
+        "name": "Atlético Madrid",
+        "shortName": "Atlético Madrid",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/0ulh3q1719984315.png"
+      },
+      "competition": {
+        "code": "PD",
+        "name": "Spanish La Liga",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/ja4it51687628717.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 1,
+          "away": 2
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Spanish La Liga",
+      "leagueName": "Spanish La Liga"
+    },
+    {
+      "id": "2279745",
+      "status": "FINISHED",
+      "utcDate": "2026-05-12T18:00:00Z",
+      "homeTeam": {
+        "id": "133722",
+        "name": "Real Betis",
+        "shortName": "Real Betis",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/2oqulv1663245386.png"
+      },
+      "awayTeam": {
+        "id": "134384",
+        "name": "Elche",
+        "shortName": "Elche",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/e4vaw51655594332.png"
+      },
+      "competition": {
+        "code": "PD",
+        "name": "Spanish La Liga",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/ja4it51687628717.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 2,
+          "away": 1
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Spanish La Liga",
+      "leagueName": "Spanish La Liga"
+    },
+    {
+      "id": "2279746",
+      "status": "FINISHED",
+      "utcDate": "2026-05-12T17:00:00Z",
+      "homeTeam": {
+        "id": "133937",
+        "name": "Celta Vigo",
+        "shortName": "Celta Vigo",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/xfjtku1690436219.png"
+      },
+      "awayTeam": {
+        "id": "133732",
+        "name": "Levante",
+        "shortName": "Levante",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/xwtxsx1473503739.png"
+      },
+      "competition": {
+        "code": "PD",
+        "name": "Spanish La Liga",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/ja4it51687628717.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 2,
+          "away": 3
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Spanish La Liga",
+      "leagueName": "Spanish La Liga"
+    },
+    {
+      "id": "2267431",
+      "status": "FINISHED",
+      "utcDate": "2026-05-11T19:00:00Z",
+      "homeTeam": {
+        "id": "133616",
+        "name": "Tottenham Hotspur",
+        "shortName": "Tottenham Hotspur",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/dfyfhl1604094109.png"
+      },
+      "awayTeam": {
+        "id": "133635",
+        "name": "Leeds United",
+        "shortName": "Leeds United",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/jcgrml1756649030.png"
+      },
+      "competition": {
+        "code": "PL",
+        "name": "English Premier League",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/gasy9d1737743125.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 1,
+          "away": 1
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "English Premier League",
+      "leagueName": "English Premier League"
+    },
+    {
+      "id": "2265392",
+      "status": "FINISHED",
+      "utcDate": "2026-05-11T18:45:00Z",
+      "homeTeam": {
+        "id": "133670",
+        "name": "Napoli",
+        "shortName": "Napoli",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/l8qyxv1742982541.png"
+      },
+      "awayTeam": {
+        "id": "134781",
+        "name": "Bologna",
+        "shortName": "Bologna",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/2qi1u31655592366.png"
+      },
+      "competition": {
+        "code": "SA",
+        "name": "Italian Serie A",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/67q3q21679951383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 2,
+          "away": 3
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Italian Serie A",
+      "leagueName": "Italian Serie A"
+    },
+    {
+      "id": "2267981",
+      "status": "FINISHED",
+      "utcDate": "2026-05-11T17:00:00Z",
+      "homeTeam": {
+        "id": "135294",
+        "name": "Cracovia",
+        "shortName": "Cracovia",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/bgqbo51714200086.png"
+      },
+      "awayTeam": {
+        "id": "138916",
+        "name": "Radomiak Radom",
+        "shortName": "Radomiak Radom",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/wpi1dx1698554708.png"
+      },
+      "competition": {
+        "code": "tsdb:4422",
+        "name": "Polish Ekstraklasa",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/l3jovw1516960585.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 0,
+          "away": 0
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Polish Ekstraklasa",
+      "leagueName": "Polish Ekstraklasa"
+    },
+    {
+      "id": "2265391",
+      "status": "FINISHED",
+      "utcDate": "2026-05-10T18:45:00Z",
+      "homeTeam": {
+        "id": "133667",
+        "name": "AC Milan",
+        "shortName": "AC Milan",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/wvspur1448806617.png"
+      },
+      "awayTeam": {
+        "id": "134782",
+        "name": "Atalanta",
+        "shortName": "Atalanta",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/lrvxg71534873930.png"
+      },
+      "competition": {
+        "code": "SA",
+        "name": "Italian Serie A",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/67q3q21679951383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 2,
+          "away": 3
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Italian Serie A",
+      "leagueName": "Italian Serie A"
+    },
+    {
+      "id": "2265387",
+      "status": "FINISHED",
+      "utcDate": "2026-05-10T13:00:00Z",
+      "homeTeam": {
+        "id": "134224",
+        "name": "Cremonese",
+        "shortName": "Cremonese",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/6ng2vy1579708291.png"
+      },
+      "awayTeam": {
+        "id": "133859",
+        "name": "Pisa",
+        "shortName": "Pisa",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/2eso9w1579708309.png"
+      },
+      "competition": {
+        "code": "SA",
+        "name": "Italian Serie A",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/67q3q21679951383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 3,
+          "away": 0
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Italian Serie A",
+      "leagueName": "Italian Serie A"
+    },
+    {
+      "id": "2265388",
+      "status": "FINISHED",
+      "utcDate": "2026-05-10T13:00:00Z",
+      "homeTeam": {
+        "id": "133674",
+        "name": "Fiorentina",
+        "shortName": "Fiorentina",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/hc8nhu1656098030.png"
+      },
+      "awayTeam": {
+        "id": "133675",
+        "name": "Genoa",
+        "shortName": "Genoa",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/52s8dn1655553600.png"
+      },
+      "competition": {
+        "code": "SA",
+        "name": "Italian Serie A",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/67q3q21679951383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 0,
+          "away": 0
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Italian Serie A",
+      "leagueName": "Italian Serie A"
+    },
+    {
+      "id": 77546,
+      "status": "FINISHED",
+      "utcDate": "2026-05-10T17:30:00Z",
+      "homeTeam": {
+        "id": 81,
+        "name": "1. FSV Mainz 05",
+        "shortName": "1. FSV Mainz 05",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Logo_Mainz_05.svg/1200px-Logo_Mainz_05.svg.png"
+      },
+      "awayTeam": {
+        "id": 80,
+        "name": "1. FC Union Berlin",
+        "shortName": "1. FC Union Berlin",
+        "crest": "https://assets.dfb.de/uploads/000/018/232/small_union-Berlin.jpg"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga"
+    },
+    {
+      "id": 77552,
+      "status": "FINISHED",
+      "utcDate": "2026-05-10T15:30:00Z",
+      "homeTeam": {
+        "id": 65,
+        "name": "1. FC Köln",
+        "shortName": "1. FC Köln",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/0/01/1._FC_Koeln_Logo_2014%E2%80%93.svg"
+      },
+      "awayTeam": {
+        "id": 199,
+        "name": "1. FC Heidenheim 1846",
+        "shortName": "1. FC Heidenheim 1846",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/9/9d/1._FC_Heidenheim_1846.svg"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga"
+    },
+    {
+      "id": 77553,
+      "status": "FINISHED",
+      "utcDate": "2026-05-10T13:30:00Z",
+      "homeTeam": {
+        "id": 100,
+        "name": "Hamburger SV",
+        "shortName": "Hamburger SV",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Hamburger_SV_logo.svg"
+      },
+      "awayTeam": {
+        "id": 112,
+        "name": "SC Freiburg",
+        "shortName": "SC Freiburg",
+        "crest": "https://i.imgur.com/r3mvi0h.png"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga"
+    },
+    {
+      "id": 77549,
+      "status": "FINISHED",
+      "utcDate": "2026-05-09T16:30:00Z",
+      "homeTeam": {
+        "id": 131,
+        "name": "VfL Wolfsburg",
+        "shortName": "VfL Wolfsburg",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/VfL_Wolfsburg_Logo.svg/120px-VfL_Wolfsburg_Logo.svg.png"
+      },
+      "awayTeam": {
+        "id": 40,
+        "name": "FC Bayern München",
+        "shortName": "FC Bayern München",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/1/1f/Logo_FC_Bayern_M%C3%BCnchen_%282002%E2%80%932017%29.svg"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga"
+    },
+    {
+      "id": 77547,
+      "status": "FINISHED",
+      "utcDate": "2026-05-09T13:30:00Z",
+      "homeTeam": {
+        "id": 1635,
+        "name": "RB Leipzig",
+        "shortName": "RB Leipzig",
+        "crest": "https://i.imgur.com/Rpwsjz1.png"
+      },
+      "awayTeam": {
+        "id": 98,
+        "name": "FC St. Pauli",
+        "shortName": "FC St. Pauli",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Fc_st_pauli_logo.svg"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga"
+    },
+    {
+      "id": 77548,
+      "status": "FINISHED",
+      "utcDate": "2026-05-09T13:30:00Z",
+      "homeTeam": {
+        "id": 16,
+        "name": "VfB Stuttgart",
+        "shortName": "VfB Stuttgart",
+        "crest": "https://i.imgur.com/v0tkpNx.png"
+      },
+      "awayTeam": {
+        "id": 6,
+        "name": "Bayer 04 Leverkusen",
+        "shortName": "Bayer 04 Leverkusen",
+        "crest": "https://www.bundesliga-reisefuehrer.de/sites/default/files/B04_Standard_Logo_RGB.png"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga"
+    },
+    {
+      "id": 77550,
+      "status": "FINISHED",
+      "utcDate": "2026-05-09T13:30:00Z",
+      "homeTeam": {
+        "id": 95,
+        "name": "FC Augsburg",
+        "shortName": "FC Augsburg",
+        "crest": "https://i.imgur.com/sdE62e2.png"
+      },
+      "awayTeam": {
+        "id": 87,
+        "name": "Borussia Mönchengladbach",
+        "shortName": "Borussia Mönchengladbach",
+        "crest": "https://i.imgur.com/KSIk0Eu.png"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga"
+    },
+    {
+      "id": 77551,
+      "status": "FINISHED",
+      "utcDate": "2026-05-09T13:30:00Z",
+      "homeTeam": {
+        "id": 175,
+        "name": "TSG Hoffenheim",
+        "shortName": "TSG Hoffenheim",
+        "crest": "https://i.imgur.com/gF0PfEl.png"
+      },
+      "awayTeam": {
+        "id": 134,
+        "name": "SV Werder Bremen",
+        "shortName": "SV Werder Bremen",
+        "crest": "https://upload.wikimedia.org/wikipedia/commons/b/be/SV-Werder-Bremen-Logo.svg"
+      },
+      "competition": {
+        "code": "BL1",
+        "name": "Bundesliga",
+        "emblem": null
+      },
+      "score": {
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "competitionName": "Bundesliga",
+      "leagueName": "Bundesliga"
+    },
+    {
+      "id": "2265390",
+      "status": "FINISHED",
+      "utcDate": "2026-05-09T18:45:00Z",
+      "homeTeam": {
+        "id": "133678",
+        "name": "Lecce",
+        "shortName": "Lecce",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/j4vznr1567365249.png"
+      },
+      "awayTeam": {
+        "id": "133676",
+        "name": "Juventus",
+        "shortName": "Juventus",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/uxf0gr1742983727.png"
+      },
+      "competition": {
+        "code": "SA",
+        "name": "Italian Serie A",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/67q3q21679951383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 0,
+          "away": 1
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Italian Serie A",
+      "leagueName": "Italian Serie A"
+    },
+    {
+      "id": "2265389",
+      "status": "FINISHED",
+      "utcDate": "2026-05-09T16:00:00Z",
+      "homeTeam": {
+        "id": "133668",
+        "name": "Lazio",
+        "shortName": "Lazio",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/rwqyvs1448806608.png"
+      },
+      "awayTeam": {
+        "id": "133681",
+        "name": "Inter Milan",
+        "shortName": "Inter Milan",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/ryhu6d1617113103.png"
+      },
+      "competition": {
+        "code": "SA",
+        "name": "Italian Serie A",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/67q3q21679951383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 0,
+          "away": 3
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Italian Serie A",
+      "leagueName": "Italian Serie A"
+    },
+    {
+      "id": "2265386",
+      "status": "FINISHED",
+      "utcDate": "2026-05-09T13:00:00Z",
+      "homeTeam": {
+        "id": "134783",
+        "name": "Cagliari",
+        "shortName": "Cagliari",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/wvsvxt1447534471.png"
+      },
+      "awayTeam": {
+        "id": "133679",
+        "name": "Udinese",
+        "shortName": "Udinese",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/vwvstr1448806811.png"
+      },
+      "competition": {
+        "code": "SA",
+        "name": "Italian Serie A",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/67q3q21679951383.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 0,
+          "away": 2
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": null,
+      "competitionName": "Italian Serie A",
+      "leagueName": "Italian Serie A"
+    }
+  ],
+  "fetchedAt": 1779141313940
+}

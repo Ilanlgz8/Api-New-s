@@ -6,8 +6,9 @@ import { clsx } from 'clsx';
 import { useNews } from '@/hooks/useNews';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { WidgetSkeleton, ErrorCard } from '@/components/ui/Skeleton';
+import type { NewsArticle, NewsCountry } from '@/lib/newsTypes';
 
-type Country = 'fr' | 'us';
+type Country = Extract<NewsCountry, 'fr' | 'us'>;
 
 export const NewsWidget = React.memo(function NewsWidget() {
   const [country, setCountry] = useState<Country>('fr');
@@ -40,7 +41,7 @@ export const NewsWidget = React.memo(function NewsWidget() {
         <ErrorCard message="Actualités indisponibles" />
       ) : (
         <div className="space-y-3 max-h-80 overflow-y-auto">
-          {data?.articles?.slice(0, 8).map((article: any, i: number) => (
+          {data?.articles?.slice(0, 8).map((article: NewsArticle, i: number) => (
             <ArticleRow key={i} article={article} />
           ))}
         </div>
@@ -49,7 +50,7 @@ export const NewsWidget = React.memo(function NewsWidget() {
   );
 });
 
-const ArticleRow = React.memo(function ArticleRow({ article }: { article: any }) {
+const ArticleRow = React.memo(function ArticleRow({ article }: { article: NewsArticle }) {
   return (
     <a
       href={article.url}
@@ -75,7 +76,7 @@ const ArticleRow = React.memo(function ArticleRow({ article }: { article: any })
         <div className="flex items-center gap-2 text-xs">
           <span className="font-semibold text-cyan-300/80 truncate">{article.source?.name}</span>
           <span className="text-text-secondary/40">·</span>
-          <span className="text-text-secondary/60 font-mono whitespace-nowrap">{formatTime(article.publishedAt)}</span>
+          <span className="text-text-secondary/60 font-mono whitespace-nowrap">{formatTime(article.publishedAt ?? new Date().toISOString())}</span>
         </div>
         <p className="text-sm leading-snug text-text-primary line-clamp-2 group-hover:text-white transition-colors duration-300 font-medium">
           {article.title?.replace(/\s*-\s*\S+$/, '')}

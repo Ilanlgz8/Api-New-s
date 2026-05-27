@@ -1,0 +1,134 @@
+{
+  "matches": [
+    {
+      "id": "2284122",
+      "status": "IN_PLAY",
+      "utcDate": "2026-05-27T17:00:00Z",
+      "homeTeam": {
+        "id": "144766",
+        "name": "Barcelona Femení",
+        "shortName": "Barcelona Femení",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/2we5kr1641409884.png"
+      },
+      "awayTeam": {
+        "id": "144779",
+        "name": "Real Sociedad Femenino",
+        "shortName": "Real Sociedad Femenino",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/l2728s1641561085.png"
+      },
+      "competition": {
+        "code": "tsdb:5106",
+        "name": "Spanish Liga F",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/xa4s481664007070.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 2,
+          "away": 1
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": {
+        "minute": null,
+        "source": "thesportsdb",
+        "score": {
+          "home": 2,
+          "away": 1
+        }
+      },
+      "liveSource": "thesportsdb",
+      "competitionName": "Spanish Liga F",
+      "leagueName": "Spanish Liga F"
+    },
+    {
+      "id": "2284123",
+      "status": "IN_PLAY",
+      "utcDate": "2026-05-27T19:00:00Z",
+      "homeTeam": {
+        "id": "146411",
+        "name": "Deportivo de La Coruña Women",
+        "shortName": "Deportivo de La Coruña Women",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/dimxq71656356728.png"
+      },
+      "awayTeam": {
+        "id": "144784",
+        "name": "Espanyol Femení",
+        "shortName": "Espanyol Femení",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/wwdohe1641563745.png"
+      },
+      "competition": {
+        "code": "tsdb:5106",
+        "name": "Spanish Liga F",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/xa4s481664007070.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 2,
+          "away": 2
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": {
+        "minute": null,
+        "source": "thesportsdb",
+        "score": {
+          "home": 2,
+          "away": 2
+        }
+      },
+      "liveSource": "thesportsdb",
+      "competitionName": "Spanish Liga F",
+      "leagueName": "Spanish Liga F"
+    },
+    {
+      "id": "2286046",
+      "status": "IN_PLAY",
+      "utcDate": "2026-05-27T17:00:00Z",
+      "homeTeam": {
+        "id": "146503",
+        "name": "Hohenems",
+        "shortName": "Hohenems",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/0z22mg1657897146.png"
+      },
+      "awayTeam": {
+        "id": "146504",
+        "name": "Lauterach",
+        "shortName": "Lauterach",
+        "crest": "https://r2.thesportsdb.com/images/media/team/badge/jrtnh21657897148.png"
+      },
+      "competition": {
+        "code": "tsdb:5316",
+        "name": "Austrian Regionalliga West",
+        "emblem": "https://r2.thesportsdb.com/images/media/league/badge/dimo7o1659092429.png"
+      },
+      "score": {
+        "fullTime": {
+          "home": 4,
+          "away": 1
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      },
+      "liveDetails": {
+        "minute": null,
+        "source": "thesportsdb",
+        "score": {
+          "home": 4,
+          "away": 1
+        }
+      },
+      "liveSource": "thesportsdb",
+      "competitionName": "Austrian Regionalliga West",
+      "leagueName": "Austrian Regionalliga West"
+    }
+  ],
+  "fetchedAt": 1779917458190
+}

@@ -6,6 +6,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { useEnergy } from '@/hooks/useEnergy';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { WidgetSkeleton, ErrorCard } from '@/components/ui/Skeleton';
+import type { EnergySource } from '@/lib/energyTypes';
 
 const ENERGY_COLORS: Record<string, string> = {
   NUCLEAR: '#8b5cf6',
@@ -33,29 +34,21 @@ export const EnergyWidget = React.memo(function EnergyWidget() {
   if (error) return <ErrorCard message="Données énergie indisponibles" />;
 
   // Parse les données RTE
-  const productions: { name: string; value: number; color: string }[] = [];
+  const productions: Array<EnergySource & { name: string }> = [];
   let totalProduction = 0;
   let consumption = 0;
 
-  if (data?.production?.actual_generations_per_production_type) {
-    for (const prod of data.production.actual_generations_per_production_type) {
-      const lastValue = prod.values?.[prod.values.length - 1]?.value ?? 0;
-      if (lastValue > 0) {
-        const type = prod.production_type;
-        productions.push({
-          name: ENERGY_LABELS[type] ?? type,
-          value: lastValue,
-          color: ENERGY_COLORS[type] ?? '#64748b',
-        });
-        totalProduction += lastValue;
-      }
+  if (data?.production) {
+    for (const prod of data.production) {
+      productions.push({
+        ...prod,
+        name: ENERGY_LABELS[prod.key] ?? prod.label,
+      });
+      totalProduction += prod.value;
     }
   }
 
-  if (data?.consommation?.short_term?.[0]?.values) {
-    const vals = data.consommation.short_term[0].values;
-    consumption = vals[vals.length - 1]?.value ?? 0;
-  }
+  consumption = data?.consumption ?? 0;
 
   const balance = totalProduction - consumption;
 
@@ -105,8 +98,8 @@ export const EnergyWidget = React.memo(function EnergyWidget() {
                     strokeWidth={2}
                     stroke="#0a0e1a"
                   >
-                    {productions.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} opacity={0.85} />
+                    {productions.map((entry) => (
+                      <Cell key={entry.key} fill={entry.color} opacity={0.85} />
                     ))}
                   </Pie>
                   <Tooltip
@@ -119,7 +112,7 @@ export const EnergyWidget = React.memo(function EnergyWidget() {
 
             {/* Legend */}
             <div className="flex-1 space-y-2">
-              {productions.sort((a, b) => b.value - a.value).map((p) => (
+              {[...productions].sort((a, b) => b.value - a.value).map((p) => (
                 <div key={p.name} className="flex items-center gap-3 group cursor-pointer transition-opacity hover:opacity-80">
                   <div className="w-3 h-3 rounded-full flex-shrink-0 transition-transform group-hover:scale-125" style={{ background: p.color }} />
                   <span className="text-xs text-text-secondary flex-1">{p.name}</span>
