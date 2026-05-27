@@ -555,6 +555,16 @@ export const FootballWidget = React.memo(function FootballWidget() {
     [allCompetitions]
   );
 
+  // Exclude competitions that we don't want to show as tabs because they are empty or misrouted
+  const nonDefaultCompetitionsFiltered = useMemo(() => {
+    const excludedKeywords = ['europa', 'conference', 'uel', 'uecl', 'europaleague', 'conferenceleague'];
+    return nonDefaultCompetitions.filter((league) => {
+      const key = normalizeName(String(league.key ?? ''));
+      const label = normalizeName(String(league.label ?? ''));
+      return !excludedKeywords.some((kw) => key.includes(kw) || label.includes(kw));
+    });
+  }, [nonDefaultCompetitions]);
+
   useEffect(() => {
     if (activeLeague === 'TOUT') return;
 
@@ -821,7 +831,7 @@ export const FootballWidget = React.memo(function FootballWidget() {
                 {worldCupCount}
               </span>
             </button>
-            {nonDefaultCompetitions.map((league) => (
+            {nonDefaultCompetitionsFiltered.map((league) => (
               <button
                 key={league.key}
                 onClick={() => {
