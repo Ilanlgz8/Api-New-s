@@ -1,5 +1,6 @@
 import { FootballEvent } from './footballTypes';
 import { teamRating, extractLiveStatVector } from './footballHelpers';
+import { getLeagueMargin } from './oddsConfig';
 
 export type Odds = {
   win: number;
@@ -114,8 +115,8 @@ export function adjustLiveProbs(orig: { home: number; draw: number; away: number
 }
 
 // Main exported compute function
-export function computeModelOdds(match: FootballEvent, opts?: { nowTick?: number; margin?: number }) : Odds {
-  const margin = opts?.margin ?? 1.06;
+export function computeModelOdds(match: FootballEvent, opts?: { nowTick?: number; margin?: number; leagueCode?: string }) : Odds {
+  const margin = opts?.margin ?? getLeagueMargin(opts?.leagueCode ?? (match?.competition?.code ?? match?.competition?.name));
   const prices = match.publicOdds?.prices;
 
   // pre-match probabilities
