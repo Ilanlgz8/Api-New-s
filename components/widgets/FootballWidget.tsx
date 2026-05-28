@@ -39,6 +39,7 @@ import {
   teamRating,
   translateCompetitionLabel,
 } from '@/lib/footballHelpers';
+import { computeModelOdds } from '@/lib/footballOddsModel';
 
 const MATCHES_PER_PAGE = 4;
 
@@ -71,21 +72,8 @@ function getBookOdds(match: FootballEvent): Odds {
     };
   }
 
-  const home = teamRating(match.homeTeam) + 3.5;
-  const away = teamRating(match.awayTeam);
-  const diff = home - away;
-  const drawBase = Math.max(0.18, Math.min(0.31, 0.28 - Math.abs(diff) * 0.003));
-  const homeRaw = 1 / (1 + Math.exp(-diff / 13));
-  const homeProb = (1 - drawBase) * homeRaw;
-  const awayProb = (1 - drawBase) * (1 - homeRaw);
-  const margin = 1.07;
-
-  return {
-    win: clampOdd(margin / homeProb),
-    draw: clampOdd(margin / drawBase),
-    loss: clampOdd(margin / awayProb),
-    source: 'model',
-  };
+  // fallback to improved model in lib/footballOddsModel
+  return computeModelOdds(match, { nowTick: undefined });
 }
 
 function oddsToProbabilities(odds: Odds) {
