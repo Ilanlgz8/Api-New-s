@@ -555,13 +555,25 @@ export const FootballWidget = React.memo(function FootballWidget() {
     [allCompetitions]
   );
 
-  // Exclude competitions that we don't want to show as tabs because they are empty or misrouted
+  // Exclude only explicit Europa / Conference League entries (avoid overbroad substring matches)
   const nonDefaultCompetitionsFiltered = useMemo(() => {
-    const excludedKeywords = ['europa', 'conference', 'uel', 'uecl', 'europaleague', 'conferenceleague'];
+    const exactPhrases = ['europa league', 'uefa europa league', 'conference league', 'uefa conference league'];
+    const codes = ['uel', 'uecl'];
+
     return nonDefaultCompetitions.filter((league) => {
-      const key = normalizeName(String(league.key ?? ''));
-      const label = normalizeName(String(league.label ?? ''));
-      return !excludedKeywords.some((kw) => key.includes(kw) || label.includes(kw));
+      const key = normalizeName(String(league.key ?? '')).replace(/[^a-z0-9]/g, '');
+      const label = normalizeName(String(league.label ?? '')).replace(/[^a-z0-9]/g, '');
+
+      // check codes (short identifiers)
+      if (codes.includes(key)) return false;
+
+      // check normalized full phrases
+      for (const phrase of exactPhrases) {
+        const p = phrase.replace(/[^a-z0-9]/g, '');
+        if (label === p || label.includes(p) || key === p || key.includes(p)) return false;
+      }
+
+      return true;
     });
   }, [nonDefaultCompetitions]);
 
