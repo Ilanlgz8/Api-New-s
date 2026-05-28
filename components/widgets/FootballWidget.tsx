@@ -456,7 +456,6 @@ export const FootballWidget = React.memo(function FootballWidget() {
   const [selectedMatch, setSelectedMatch] = useState<FootballEvent | null>(null);
   const { live, today, results, refetch } = useFootball();
   const [nowTick, setNowTick] = useState<number>(Date.now());
-  const [showDebug, setShowDebug] = useState(false);
 
   const current = tab === 'live' ? live : tab === 'today' ? today : results;
   const rawItems = tab === 'live' ? current.data?.matches ?? [] : current.data?.events ?? [];
@@ -540,7 +539,17 @@ export const FootballWidget = React.memo(function FootballWidget() {
     // Filter: keep only allowed championships and those with an emblem
     const final = Array.from(merged.values()).filter((entry) => {
       if (entry.key === 'TOUT') return true;
-      const allowed = ALLOWED_COMPETITION_KEYWORDS.some((allowed) => normalizeName(entry.label).includes(allowed) || normalizeName(entry.key).includes(allowed));
+      const normalizedLabel = normalizeName(entry.label);
+      const normalizedKey = normalizeName(entry.key);
+
+      // Exclude Algerian "Ligue 1" entries: if label/key contains alg/alger/dz
+      if ((normalizedLabel.includes('ligue1') || normalizedLabel.includes('ligue-1') || normalizedKey.includes('ligue1')) &&
+          (normalizedLabel.includes('alger') || normalizedLabel.includes('algerie') || normalizedKey.includes('alg') || normalizedKey.includes('dz')))
+      {
+        return false;
+      }
+
+      const allowed = ALLOWED_COMPETITION_KEYWORDS.some((allowed) => normalizedLabel.includes(allowed) || normalizedKey.includes(allowed));
       const worldCup = isWorldCupLabel(entry.label) || isWorldCupLabel(entry.key);
       return allowed && (Boolean(entry.emblem) || worldCup);
     });
@@ -777,21 +786,7 @@ export const FootballWidget = React.memo(function FootballWidget() {
             })}
           </div>
 
-          {process.env.NODE_ENV !== 'production' && (
-            <div className="mt-2 px-3.5">
-              <button
-                onClick={() => setShowDebug((s) => !s)}
-                className="rounded-md border border-[#ff2a2a]/35 bg-[#262626] px-2 py-1 text-sm font-medium text-zinc-300 hover:border-[#ff2a2a]"
-              >
-                {showDebug ? 'Cacher diagnostic' : 'Afficher diagnostic compétitions'}
-              </button>
-              {showDebug && (
-                <pre className="mt-2 max-h-56 w-full overflow-auto rounded bg-black/60 p-2 text-[11px] text-white">
-                  {JSON.stringify({ allCompetitions, groups, visibleItems }, null, 2)}
-                </pre>
-              )}
-            </div>
-          )}
+          {/* debug toggle removed */}
         </div>
       </div>
 
