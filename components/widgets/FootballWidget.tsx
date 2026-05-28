@@ -843,7 +843,7 @@ export const FootballWidget = React.memo(function FootballWidget() {
                 {worldCupCount}
               </span>
             </button>
-            {nonDefaultCompetitionsFiltered.map((league) => (
+            {nonDefaultCompetitionsFiltered.filter((l) => (l.count ?? 0) > 0).map((league) => (
               <button
                 key={league.key}
                 onClick={() => {
