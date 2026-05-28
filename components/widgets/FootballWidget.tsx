@@ -456,6 +456,7 @@ export const FootballWidget = React.memo(function FootballWidget() {
   const [selectedMatch, setSelectedMatch] = useState<FootballEvent | null>(null);
   const { live, today, results, refetch } = useFootball();
   const [nowTick, setNowTick] = useState<number>(Date.now());
+  const [showDebug, setShowDebug] = useState(false);
 
   const current = tab === 'live' ? live : tab === 'today' ? today : results;
   const rawItems = tab === 'live' ? current.data?.matches ?? [] : current.data?.events ?? [];
@@ -775,6 +776,22 @@ export const FootballWidget = React.memo(function FootballWidget() {
               );
             })}
           </div>
+
+          {process.env.NODE_ENV !== 'production' && (
+            <div className="mt-2 px-3.5">
+              <button
+                onClick={() => setShowDebug((s) => !s)}
+                className="rounded-md border border-[#ff2a2a]/35 bg-[#262626] px-2 py-1 text-sm font-medium text-zinc-300 hover:border-[#ff2a2a]"
+              >
+                {showDebug ? 'Cacher diagnostic' : 'Afficher diagnostic compétitions'}
+              </button>
+              {showDebug && (
+                <pre className="mt-2 max-h-56 w-full overflow-auto rounded bg-black/60 p-2 text-[11px] text-white">
+                  {JSON.stringify({ allCompetitions, groups, visibleItems }, null, 2)}
+                </pre>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
